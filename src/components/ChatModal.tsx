@@ -12,7 +12,7 @@ import { motion } from 'motion/react';
 import { Loader2, Send, Sparkles, X } from 'lucide-react';
 import { ChatMessage, Reservation } from '../types/marketplace';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { formatMYR } from '../data/utmCatalog';
+import { formatMYR, resolveAssetUrl } from '../data/utmCatalog';
 import { requestAiChatSuggestions } from '../lib/aiClient';
 
 interface ChatModalProps {
@@ -200,7 +200,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         <header className="px-5 py-4 bg-gradient-to-r from-[#0A462C] to-[#135E3E] text-white flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <img
-              src={reservation.listingImage}
+              src={resolveAssetUrl(reservation.listingImage)}
               alt={reservation.listingTitle}
               referrerPolicy="no-referrer"
               className="w-11 h-11 rounded-xl object-cover shrink-0 border border-white/25"

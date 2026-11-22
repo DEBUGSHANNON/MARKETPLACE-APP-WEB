@@ -32,14 +32,28 @@ export interface AiListingInsights {
   meetupTip: string;
 }
 
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+
 async function postAiJson<T>(url: string, body: unknown): Promise<T> {
-  const res = await fetch(url, {
+  const res = await fetch(`${API_BASE}${url}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  const data = await res.json().catch(() => ({}));
+  const contentType = res.headers.get('content-type') || '';
+  const data = contentType.includes('application/json')
+    ? await res.json().catch(() => ({}))
+    : {};
   if (!res.ok) {
+    if (
+      (res.status === 404 || res.status === 405) &&
+      typeof window !== 'undefined' &&
+      window.location.hostname.endsWith('github.io')
+    ) {
+      throw new Error(
+        'AI features need the Node.js server (GitHub Pages hosts the frontend only). Run locally with npm run dev or use the AI Studio / Render link for AI tools.',
+      );
+    }
     throw new Error(
       (data as { error?: string }).error || `AI request failed (${res.status}).`,
     );

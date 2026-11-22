@@ -14,7 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { Listing } from '../types/marketplace';
-import { UTM_CAMPUS_ZONES, formatMYR } from '../data/utmCatalog';
+import { UTM_CAMPUS_ZONES, formatMYR, resolveAssetUrl } from '../data/utmCatalog';
 import { AiListingInsights, requestAiListingInsights } from '../lib/aiClient';
 
 interface ObjectDetailViewProps {
@@ -177,7 +177,7 @@ export const ObjectDetailView: React.FC<ObjectDetailViewProps> = ({
             >
               {!imageFailed && listing.imageUrl ? (
                 <img
-                  src={listing.imageUrl}
+                  src={resolveAssetUrl(listing.imageUrl)}
                   alt={listing.title}
                   referrerPolicy="no-referrer"
                   onError={() => setImageFailed(true)}
@@ -460,7 +460,7 @@ export const ObjectDetailView: React.FC<ObjectDetailViewProps> = ({
               >
                 <div className="aspect-[4/3] bg-[#E3ECE0] overflow-hidden">
                   <img
-                    src={item.imageUrl}
+                    src={resolveAssetUrl(item.imageUrl)}
                     alt={item.title}
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -501,7 +501,7 @@ export const ObjectDetailView: React.FC<ObjectDetailViewProps> = ({
             <X className="w-5 h-5" />
           </button>
           <img
-            src={listing.imageUrl}
+            src={resolveAssetUrl(listing.imageUrl)}
             alt={listing.title}
             referrerPolicy="no-referrer"
             onClick={(e) => e.stopPropagation()}

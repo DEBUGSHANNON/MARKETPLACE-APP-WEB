@@ -8,6 +8,7 @@ const rootDir = import.meta.dirname;
 
 export default defineConfig(() => {
   return {
+    base: process.env.VITE_BASE_PATH || '/',
     plugins: [
       react(),
       tailwindcss(),
@@ -26,6 +27,11 @@ export default defineConfig(() => {
           const distAssets = path.resolve(distDir, 'src/assets');
           if (fs.existsSync(distDir) && fs.existsSync(srcAssets)) {
             fs.cpSync(srcAssets, distAssets, {recursive: true, force: true});
+          }
+          const indexHtml = path.resolve(distDir, 'index.html');
+          const notFoundHtml = path.resolve(distDir, '404.html');
+          if (process.env.VITE_BASE_PATH && fs.existsSync(indexHtml)) {
+            fs.copyFileSync(indexHtml, notFoundHtml);
           }
         },
       },

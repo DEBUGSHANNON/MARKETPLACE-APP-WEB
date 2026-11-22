@@ -7,7 +7,7 @@ import {
   ListingCondition,
   Reservation,
 } from '../types/marketplace';
-import { formatMYR, UTM_CAMPUS_ZONES } from '../data/utmCatalog';
+import { formatMYR, resolveAssetUrl, UTM_CAMPUS_ZONES } from '../data/utmCatalog';
 
 interface MyListingsViewProps {
   user: User | null;
@@ -206,7 +206,7 @@ export const MyListingsView: React.FC<MyListingsViewProps> = ({
                 className="aspect-[4/3] w-full bg-[#E3ECE0] overflow-hidden cursor-pointer"
               >
                 <img
-                  src={item.imageUrl}
+                  src={resolveAssetUrl(item.imageUrl)}
                   alt={item.title}
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"

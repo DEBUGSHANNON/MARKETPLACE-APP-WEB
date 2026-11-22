@@ -3,7 +3,7 @@ import { User } from 'firebase/auth';
 import { motion } from 'motion/react';
 import { ArrowUpRight, Compass, Heart } from 'lucide-react';
 import { Listing, WishlistItem } from '../types/marketplace';
-import { formatMYR } from '../data/utmCatalog';
+import { formatMYR, resolveAssetUrl } from '../data/utmCatalog';
 
 interface WishlistViewProps {
   user: User | null;
@@ -161,7 +161,7 @@ export const WishlistView: React.FC<WishlistViewProps> = ({
                 >
                   <div className="aspect-[4/3] w-full bg-[#E3ECE0] overflow-hidden">
                     <img
-                      src={listing.imageUrl}
+                      src={resolveAssetUrl(listing.imageUrl)}
                       alt={listing.title}
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

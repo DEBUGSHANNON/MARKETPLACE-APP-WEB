@@ -13,7 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { Listing } from '../types/marketplace';
-import { UTM_CAMPUS_ZONES, formatMYR } from '../data/utmCatalog';
+import { UTM_CAMPUS_ZONES, formatMYR, resolveAssetUrl } from '../data/utmCatalog';
 import { AiListingInsights, requestAiListingInsights } from '../lib/aiClient';
 
 export interface OriginRect {
@@ -247,7 +247,7 @@ export const SphereObjectModal: React.FC<SphereObjectModalProps> = ({
                 </button>
                 {!imageFailed && listing.imageUrl ? (
                   <img
-                    src={listing.imageUrl}
+                    src={resolveAssetUrl(listing.imageUrl)}
                     alt={listing.title}
                     referrerPolicy="no-referrer"
                     onError={() => setImageFailed(true)}

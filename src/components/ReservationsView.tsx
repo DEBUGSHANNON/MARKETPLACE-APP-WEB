@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { User } from 'firebase/auth';
 import { Calendar, CheckCircle2, MapPin, MessageSquare } from 'lucide-react';
 import { Reservation } from '../types/marketplace';
-import { formatMYR } from '../data/utmCatalog';
+import { formatMYR, resolveAssetUrl } from '../data/utmCatalog';
 
 interface ReservationsViewProps {
   user: User | null;
@@ -146,7 +146,7 @@ export const ReservationsView: React.FC<ReservationsViewProps> = ({
               >
                 <div className="flex items-start gap-4 min-w-0">
                   <img
-                    src={res.listingImage}
+                    src={resolveAssetUrl(res.listingImage)}
                     alt={res.listingTitle}
                     referrerPolicy="no-referrer"
                     className="w-20 h-20 rounded-xl object-cover bg-[#E3ECE0] shrink-0"

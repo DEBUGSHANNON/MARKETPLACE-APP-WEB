@@ -11,7 +11,7 @@ import {
 import { ArrowUpRight, Loader2, MapPin, MessageSquare, Send, Sparkles } from 'lucide-react';
 import { ChatMessage, Reservation } from '../types/marketplace';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { formatMYR } from '../data/utmCatalog';
+import { formatMYR, resolveAssetUrl } from '../data/utmCatalog';
 import { requestAiChatSuggestions } from '../lib/aiClient';
 
 interface MyMessagesViewProps {
@@ -272,7 +272,7 @@ export const MyMessagesView: React.FC<MyMessagesViewProps> = ({
                   }`}
                 >
                   <img
-                    src={res.listingImage}
+                    src={resolveAssetUrl(res.listingImage)}
                     alt={res.listingTitle}
                     referrerPolicy="no-referrer"
                     className="w-14 h-14 rounded-xl object-cover bg-[#E3ECE0] shrink-0"
@@ -302,7 +302,7 @@ export const MyMessagesView: React.FC<MyMessagesViewProps> = ({
               <header className="px-5 py-4 bg-gradient-to-r from-[#0A462C] to-[#135E3E] text-white flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <img
-                    src={activeReservation.listingImage}
+                    src={resolveAssetUrl(activeReservation.listingImage)}
                     alt={activeReservation.listingTitle}
                     referrerPolicy="no-referrer"
                     className="w-11 h-11 rounded-xl object-cover shrink-0 border border-white/25"

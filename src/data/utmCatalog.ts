@@ -241,6 +241,15 @@ export function isUtmStudentEmail(email?: string | null): boolean {
   return email.trim().toLowerCase().endsWith(UTM_ALLOWED_DOMAIN);
 }
 
+export function resolveAssetUrl(url?: string | null): string {
+  if (!url) return '';
+  if (url.startsWith('/src/assets/')) {
+    const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+    return `${base}${url}`;
+  }
+  return url;
+}
+
 export function formatMYR(amount: number): string {
   return `RM ${Number(amount || 0).toLocaleString('en-MY', {
     minimumFractionDigits: 2,

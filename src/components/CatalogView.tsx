@@ -7,7 +7,7 @@ import {
   ListingStatus,
   ListingType,
 } from '../types/marketplace';
-import { formatMYR } from '../data/utmCatalog';
+import { formatMYR, resolveAssetUrl } from '../data/utmCatalog';
 import { AiConciergeResult, requestAiCampusConcierge } from '../lib/aiClient';
 
 interface CatalogViewProps {
@@ -323,7 +323,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                 >
                   <div className="aspect-[4/3] w-full bg-[#E3ECE0] overflow-hidden relative">
                     <img
-                      src={item.imageUrl}
+                      src={resolveAssetUrl(item.imageUrl)}
                       alt={item.title}
                       loading="lazy"
                       referrerPolicy="no-referrer"

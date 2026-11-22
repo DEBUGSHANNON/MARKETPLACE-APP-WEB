@@ -15,7 +15,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Listing, ListingCategory } from '../types/marketplace';
-import { formatMYR } from '../data/utmCatalog';
+import { formatMYR, resolveAssetUrl } from '../data/utmCatalog';
 import { OriginRect } from './SphereObjectModal';
 
 interface OrbitSphereProps {
@@ -424,7 +424,7 @@ export const OrbitSphere: React.FC<OrbitSphereProps> = ({
       cards.push(cardEntry);
 
       // Load photo into CanvasTexture
-      const src = entry.listing.imageUrl;
+      const src = resolveAssetUrl(entry.listing.imageUrl);
       if (src) {
         let img = imageCache.get(src);
         if (!img) {
@@ -779,7 +779,7 @@ export const OrbitSphere: React.FC<OrbitSphereProps> = ({
             >
               <div className="aspect-[4/3] bg-[#E3ECE0] overflow-hidden">
                 <img
-                  src={item.imageUrl}
+                  src={resolveAssetUrl(item.imageUrl)}
                   alt={item.title}
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -857,7 +857,7 @@ export const OrbitSphere: React.FC<OrbitSphereProps> = ({
             className="pointer-events-none absolute bottom-24 left-1/2 -translate-x-1/2 z-30 bg-white/80 backdrop-blur-xl border border-white/60 rounded-2xl shadow-lg px-4 py-2.5 flex items-center gap-4 max-w-[90vw]"
           >
             <img
-              src={hoveredListing.imageUrl}
+              src={resolveAssetUrl(hoveredListing.imageUrl)}
               alt={hoveredListing.title}
               referrerPolicy="no-referrer"
               className="w-11 h-11 rounded-lg object-cover shrink-0 bg-[#E3ECE0]"
