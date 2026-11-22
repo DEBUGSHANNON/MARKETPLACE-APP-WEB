@@ -1,0 +1,272 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+match /users/{userId} {
+  allow read, write: if request.auth != null
+                     && request.auth.uid == userId;
+}
+    function verifiedStudent() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.matches(
+          '^[^@]+@graduate\\.utm\\.my$'
+        );
+    }
+
+    function validHandover() {
+      return request.resource.data.handoverLocation is string
+        && request.resource.data.handoverLocation.size() > 0
+        && request.resource.data.handoverLocation.size() <= 150
+
+        && request.resource.data.handoverDate is string
+        && request.resource.data.handoverDate.size() == 10
+
+        && request.resource.data.handoverTime is string
+        && request.resource.data.handoverTime.size() == 5
+
+        && request.resource.data.handoverNote is string
+        && request.resource.data.handoverNote.size() <= 300
+
+        && request.resource.data.handoverLat is number
+        && request.resource.data.handoverLat >= -90
+        && request.resource.data.handoverLat <= 90
+
+        && request.resource.data.handoverLng is number
+        && request.resource.data.handoverLng >= -180
+        && request.resource.data.handoverLng <= 180;
+    }
+
+    match /listings/{listingId} {
+
+      allow get, list: if true;
+
+      allow create: if verifiedStudent()
+        && request.resource.data.sellerId == request.auth.uid
+        && request.resource.data.status == 'available';
+
+      
+allow update: if verifiedStudent()
+  && resource.data.sellerId == request.auth.uid
+  && request.resource.data.sellerId == resource.data.sellerId
+  && request.resource.data.status == resource.data.status
+  && request.resource.data.diff(resource.data)
+    .affectedKeys().hasOnly([
+      'title',
+      'description',
+      'price',
+      'category',
+      'condition',
+      'type',
+      'imageUrl',
+      'updatedAt'
+    ])
+  && request.resource.data.title is string
+  && request.resource.data.title.size() > 0
+  && request.resource.data.title.size() <= 100
+  && request.resource.data.description is string
+  && request.resource.data.description.size() > 0
+  && request.resource.data.description.size() <= 2000
+  && request.resource.data.category is string
+  && request.resource.data.category.size() > 0
+  && request.resource.data.category.size() <= 60
+  && request.resource.data.price is number
+  && request.resource.data.price >= 0;
+
+      allow update: if verifiedStudent()
+        && resource.data.status == 'available'
+        && resource.data.sellerId != request.auth.uid
+        && request.resource.data.status == 'reserved'
+        && request.resource.data.reservedBy == request.auth.uid
+        && request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly([
+            'status',
+            'reservedBy'
+          ])
+        && !exists(
+          /databases/$(database)/documents/reservations/$(listingId)
+        )
+        && getAfter(
+          /databases/$(database)/documents/reservations/$(listingId)
+        ).data.buyerId == request.auth.uid
+        && getAfter(
+          /databases/$(database)/documents/reservations/$(listingId)
+        ).data.sellerId == resource.data.sellerId
+        && getAfter(
+          /databases/$(database)/documents/reservations/$(listingId)
+        ).data.listingId == listingId
+        && getAfter(
+          /databases/$(database)/documents/reservations/$(listingId)
+        ).data.status == 'pending';
+
+      allow delete: if verifiedStudent()
+  && resource.data.sellerId == request.auth.uid
+  && resource.data.status == 'available'
+  && !exists(
+    /databases/$(database)/documents/reservations/$(listingId)
+  );
+    }
+
+    match /reservations/{reservationId} {
+
+      allow read: if verifiedStudent()
+        && (
+          resource.data.buyerId == request.auth.uid
+          || resource.data.sellerId == request.auth.uid
+        );
+
+      // Buyer creates a reservation
+      allow create: if verifiedStudent()
+        && reservationId == request.resource.data.listingId
+        && request.resource.data.buyerId == request.auth.uid
+        && request.resource.data.buyerId
+          != request.resource.data.sellerId
+        && request.resource.data.status == 'pending'
+
+        && request.resource.data.handoverLocation == ''
+        && request.resource.data.handoverDate == ''
+        && request.resource.data.handoverTime == ''
+        && request.resource.data.handoverNote == ''
+        && request.resource.data.handoverLat == null
+        && request.resource.data.handoverLng == null
+
+        && request.resource.data.keys().hasOnly([
+          'listingId',
+          'listingTitle',
+          'buyerId',
+          'sellerId',
+          'status',
+          'handoverLocation',
+          'handoverDate',
+          'handoverTime',
+          'handoverNote',
+          'handoverLat',
+          'handoverLng',
+          'createdAt'
+        ])
+
+        && request.resource.data.createdAt == request.time
+
+        && get(
+          /databases/$(database)/documents/listings/$(reservationId)
+        ).data.status == 'available'
+
+        && get(
+          /databases/$(database)/documents/listings/$(reservationId)
+        ).data.sellerId == request.resource.data.sellerId
+
+        && get(
+          /databases/$(database)/documents/listings/$(reservationId)
+        ).data.title == request.resource.data.listingTitle
+
+        && getAfter(
+          /databases/$(database)/documents/listings/$(reservationId)
+        ).data.status == 'reserved'
+
+        && getAfter(
+          /databases/$(database)/documents/listings/$(reservationId)
+        ).data.reservedBy == request.auth.uid;
+
+    // Seller creates the first handover proposal
+    // or responds to the buyer's suggested changes.
+allow update: if verifiedStudent()
+  && resource.data.sellerId == request.auth.uid
+  && resource.data.status in [
+    'pending',
+    'buyer_counter_proposed'
+  ]
+  && request.resource.data.status == 'seller_proposed'
+  && request.resource.data.diff(resource.data)
+    .affectedKeys().hasOnly([
+      'status',
+      'handoverLocation',
+      'handoverDate',
+      'handoverTime',
+      'handoverNote',
+      'handoverLat',
+      'handoverLng'
+    ])
+  && validHandover();
+
+
+// Buyer suggests different meeting details
+allow update: if verifiedStudent()
+  && resource.data.buyerId == request.auth.uid
+  && resource.data.status == 'seller_proposed'
+  && request.resource.data.status == 'buyer_counter_proposed'
+  && request.resource.data.diff(resource.data)
+    .affectedKeys().hasOnly([
+      'status',
+      'handoverLocation',
+      'handoverDate',
+      'handoverTime',
+      'handoverNote',
+      'handoverLat',
+      'handoverLng'
+    ])
+  && validHandover();
+
+
+// Buyer accepts seller's proposal
+// OR seller accepts buyer's suggested changes
+allow update: if verifiedStudent()
+  && (
+    (
+      resource.data.buyerId == request.auth.uid
+      && resource.data.status == 'seller_proposed'
+    )
+    ||
+    (
+      resource.data.sellerId == request.auth.uid
+      && resource.data.status == 'buyer_counter_proposed'
+    )
+  )
+  && resource.data.handoverLocation is string
+  && resource.data.handoverLocation.size() > 0
+  && resource.data.handoverDate is string
+  && resource.data.handoverDate.size() > 0
+  && resource.data.handoverTime is string
+  && resource.data.handoverTime.size() > 0
+  && request.resource.data.status == 'confirmed'
+  && request.resource.data.diff(resource.data)
+    .affectedKeys().hasOnly(['status']);
+
+      allow delete: if false;
+      
+      // Private messages for each reservation
+      match /messages/{messageId} {
+
+        function isChatParticipant() {
+          let reservation = get(
+            /databases/$(database)/documents/reservations/$(reservationId)
+          ).data;
+
+          return verifiedStudent()
+            && (
+              reservation.buyerId == request.auth.uid
+              || reservation.sellerId == request.auth.uid
+            );
+        }
+
+        // Only buyer and seller can read messages
+        allow read: if isChatParticipant();
+
+        // Only buyer and seller can send messages
+        allow create: if isChatParticipant()
+          && request.resource.data.keys().hasOnly([
+            'senderId',
+            'text',
+            'createdAt'
+          ])
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 1000
+          && request.resource.data.createdAt == request.time;
+
+        // Messages cannot be edited or deleted
+        allow update, delete: if false;
+      }
+    }
+  }
+}

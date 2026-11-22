@@ -1,0 +1,598 @@
+
+/* ==========================================
+   CAMPUSTRADE - RESERVATIONS PAGE
+   Green & Cream Theme
+========================================== */
+
+:root {
+  --purple: #155c3b;
+  --purple-dark: #10462e;
+  --lavender: #e8f1e6;
+  --ink: #183b2b;
+  --muted: #66796d;
+  --line: #dce8da;
+  --bg: #faf9f4;
+  --green: #155c3b;
+}
+
+body.reservations-page {
+  background: #faf9f4;
+  color: #183b2b;
+}
+
+/* Hide old marketplace sections */
+
+.reservations-page #marketplace,
+.reservations-page #create-panel,
+.reservations-page #how-it-works,
+.reservations-page .hero,
+.reservations-page .trust-strip,
+.reservations-page main > .section-heading {
+  display: none !important;
+}
+
+/* Main page */
+
+.reservations-page main {
+  min-height: calc(100vh - 150px);
+  padding: 54px 24px 80px;
+}
+
+/* Reservations container */
+
+.reservations-page #reservations {
+  display: block;
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  padding: 38px;
+  background: #fffdf9;
+  border: 1px solid #e0e9dc;
+  border-radius: 24px;
+  box-shadow: 0 12px 40px rgba(20, 70, 42, 0.05);
+}
+
+/* Keep authentication visibility working */
+
+.reservations-page #reservations.hidden {
+  display: none !important;
+}
+
+/* Heading */
+
+.reservations-heading {
+  margin-bottom: 30px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e2e9df;
+}
+
+.reservations-heading .eyebrow {
+  color: #287b50;
+  font-size: 12px;
+  letter-spacing: 2px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.reservations-heading h1 {
+  font-size: clamp(30px, 4vw, 42px);
+  line-height: 1.2;
+  letter-spacing: -1px;
+  color: #183b2b;
+  margin: 0 0 12px;
+}
+
+.reservations-subtitle {
+  color: #66796d;
+  font-size: 15px;
+  margin: 0;
+  line-height: 1.7;
+}
+
+/* Reservation list */
+
+.reservations-page .reservation-list {
+  display: grid;
+  gap: 18px;
+}
+
+/* Individual reservation cards */
+
+.reservations-page .reservation-card {
+  background: #ffffff;
+  border: 1px solid #dce8da;
+  border-radius: 18px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  box-shadow: 0 3px 12px rgba(20, 70, 42, 0.03);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.reservations-page .reservation-card:hover {
+  border-color: #a9cdb5;
+  box-shadow: 0 8px 24px rgba(20, 70, 42, 0.07);
+}
+
+.reservations-page .reservation-card strong {
+  color: #183b2b;
+  font-size: 17px;
+}
+
+.reservations-page .reservation-card p {
+  color: #66796d;
+  font-size: 13px;
+  margin: 6px 0;
+}
+
+/* Buttons */
+
+.reservations-page .btn-primary {
+  background: #155c3b;
+  color: #fff;
+}
+
+.reservations-page .btn-primary:hover {
+  background: #10462e;
+}
+
+.reservations-page .btn-secondary {
+  background: #e8f1e6;
+  color: #155c3b;
+}
+
+.reservations-page .btn-secondary:hover {
+  background: #d6e8d7;
+}
+
+.reservations-page .small-btn {
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+/* Empty reservations */
+
+.reservations-page .empty-state {
+  background: #f6faf4;
+  border: 1px dashed #b9d4bd;
+  border-radius: 16px;
+  color: #66796d;
+  padding: 50px 20px;
+}
+
+/* Chat popup */
+
+.reservations-page .chat-header {
+  background: #155c3b;
+}
+
+.reservations-page .chat-header h2 {
+  color: white;
+}
+
+.reservations-page .chat-messages {
+  background: #f7faf5;
+}
+
+.reservations-page .chat-bubble.mine {
+  background: #155c3b;
+  color: white;
+}
+
+.reservations-page .chat-bubble.theirs {
+  background: #e3eee1;
+  color: #183b2b;
+}
+
+.reservations-page .chat-send-btn {
+  background: #155c3b;
+  color: white;
+}
+
+.reservations-page .chat-send-btn:hover {
+  background: #10462e;
+}
+
+.reservations-page .chat-icon-btn,
+.reservations-page .chat-emoji-panel button {
+  background: #e8f1e6;
+}
+
+.reservations-page #chatInput:focus {
+  outline-color: #155c3b;
+}
+
+/* Handover popup */
+
+.reservations-page .handover-dialog {
+  border-radius: 22px;
+}
+
+.reservations-page .handover-search-btn,
+.reservations-page #submitHandover {
+  background: #155c3b;
+  color: white;
+}
+
+.reservations-page .handover-search-btn:hover,
+.reservations-page #submitHandover:hover {
+  background: #10462e;
+}
+
+.reservations-page .handover-dialog input:focus,
+.reservations-page .handover-dialog select:focus,
+.reservations-page .handover-dialog textarea:focus {
+  outline-color: #155c3b;
+}
+
+/* Footer */
+
+.reservations-page footer {
+  background: #fffdf8;
+  border-top: 1px solid #e2e9df;
+}
+
+/* Responsive layout */
+
+@media (max-width: 700px) {
+  .reservations-page main {
+    padding: 24px 14px 50px;
+  }
+
+  .reservations-page #reservations {
+    padding: 24px 18px;
+    border-radius: 18px;
+  }
+
+  .reservations-page .reservation-card {
+    padding: 18px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reservations-page .reservation-card button {
+    width: 100%;
+  }
+
+  .reservations-heading h1 {
+    font-size: 30px;
+  }
+}
+
+/* ==========================================
+   Match CampusTrade Home appearance
+========================================== */
+
+body.reservations-page {
+  background: #f4f8ef;
+  color: #06472d;
+  font-family: Inter, Arial, sans-serif;
+}
+
+/* Header dimensions */
+
+.reservations-page .topbar {
+  height: 94px;
+  padding: 0 6%;
+  background: #f4f8ef;
+  border-bottom: 1px solid #dce7d8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Brand */
+
+.reservations-page .brand {
+  font-size: 24px;
+  font-weight: 800;
+  color: #06472d;
+}
+
+.reservations-page .brand-mark {
+  width: 44px;
+  height: 44px;
+  background: #06472d;
+  border-radius: 13px;
+  font-size: 23px;
+}
+
+/* Navigation */
+
+.reservations-page .main-nav {
+  display: flex;
+  align-items: center;
+  gap: 42px;
+}
+
+.reservations-page .main-nav a {
+  color: #3d7058;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.reservations-page .main-nav a.active {
+  color: #06472d;
+  font-weight: 800;
+}
+
+/* Account area */
+
+.reservations-page .account-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Main background */
+
+.reservations-page main {
+  background: #f4f8ef;
+}
+
+/* Reservation panel */
+
+.reservations-page #reservations {
+  background: #fffdf8;
+  border-color: #dce7d8;
+}
+
+/* Reservation cards */
+
+.reservations-page .reservation-card {
+  border-color: #dce7d8;
+}
+
+/* Responsive */
+
+@media (max-width: 700px) {
+  .reservations-page .topbar {
+    padding: 0 18px;
+    height: auto;
+    min-height: 80px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .reservations-page .brand {
+    font-size: 19px;
+  }
+
+  .reservations-page .main-nav {
+    gap: 14px;
+  }
+
+  .reservations-page .main-nav a {
+    font-size: 14px;
+  }
+}
+
+/* Match the exact Home navigation */
+
+.reservations-page {
+  --home-cream: #F5F8EF;
+  --home-green: #08482D;
+  --home-mint: #DAE7C7;
+  --home-text: #506556;
+  background: var(--home-cream);
+  color: var(--home-green);
+}
+
+.reservations-page .home-navbar {
+  height: 86px;
+  padding: 0 6%;
+  background: var(--home-cream);
+}
+
+.reservations-page .home-logo,
+.reservations-page .home-links a {
+  text-decoration: none;
+}
+
+.reservations-page main {
+  background: var(--home-cream);
+}
+
+.reservations-page #reservations {
+  background: #fffdf9;
+  border: 1px solid #dce7d5;
+}
+
+.reservations-page .reservations-heading h1 {
+  color: var(--home-green);
+}
+
+.reservations-page .reservation-card {
+  border-color: #dce7d5;
+}
+
+.reservations-page .legacy-account-controls {
+  display: none !important;
+}
+
+@media (max-width: 600px) {
+  .reservations-page .home-navbar {
+    height: auto;
+    min-height: 80px;
+    padding: 15px 5%;
+  }
+}
+
+/* ==========================================
+   CAMPUSTRADE - CHAT POPUP
+   Home Green & Cream Theme
+========================================== */
+
+.reservations-page .chat-dialog {
+  background: #fffdf9;
+  border: 1px solid #dce7d5;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(8, 72, 45, 0.18);
+}
+
+/* Chat header */
+
+.reservations-page .chat-header {
+  background: #08482D;
+  color: #ffffff;
+  padding: 20px 24px;
+}
+
+.reservations-page .chat-header h2 {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.reservations-page .chat-header p {
+  color: #dcebdc;
+}
+
+/* Close button */
+
+.reservations-page .chat-close {
+  color: #ffffff;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.reservations-page .chat-close:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Conversation background */
+
+.reservations-page .chat-messages {
+  background: #F5F8EF;
+}
+
+/* My messages */
+
+.reservations-page .chat-bubble.mine {
+  background: #08482D;
+  color: #ffffff;
+  border-radius: 16px 16px 4px 16px;
+}
+
+/* Seller messages */
+
+.reservations-page .chat-bubble.theirs {
+  background: #DAE7C7;
+  color: #08482D;
+  border-radius: 16px 16px 16px 4px;
+}
+
+/* Message input area */
+
+.reservations-page .chat-compose {
+  background: #fffdf9;
+  border-top: 1px solid #dce7d5;
+}
+
+.reservations-page #chatInput {
+  background: #ffffff;
+  color: #08482D;
+  border: 1px solid #dce7d5;
+  border-radius: 12px;
+}
+
+.reservations-page #chatInput:focus {
+  outline: 2px solid #08482D;
+  outline-offset: 1px;
+}
+
+/* Emoji button */
+
+.reservations-page .chat-icon-btn {
+  background: #DAE7C7;
+  color: #08482D;
+  border-radius: 12px;
+}
+
+.reservations-page .chat-emoji-panel {
+  background: #fffdf9;
+}
+
+.reservations-page .chat-emoji-panel button {
+  background: #F5F8EF;
+  border-radius: 8px;
+}
+
+/* Send button */
+
+.reservations-page .chat-send-btn {
+  background: #08482D;
+  color: #ffffff;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.reservations-page .chat-send-btn:hover {
+  background: #0e603e;
+}
+
+/* Keyboard hint */
+
+.reservations-page .chat-keyboard-hint {
+  background: #fffdf9;
+  color: #66796d;
+}
+
+/* ==========================================
+   RESERVATION TABS
+   CampusTrade Green & Cream
+========================================== */
+
+.reservations-page .reservation-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 28px;
+  padding: 6px;
+  background: #F5F8EF;
+  border: 1px solid #dce7d5;
+  border-radius: 16px;
+}
+
+.reservations-page .reservation-tab {
+  flex: 1;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: #08482D;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.reservations-page .reservation-tab:hover {
+  background: #DAE7C7;
+}
+
+.reservations-page .reservation-tab.active {
+  background: #08482D;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(8, 72, 45, 0.12);
+}
+
+.reservations-page .reservation-tab:focus-visible {
+  outline: 2px solid #08482D;
+  outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  .reservations-page .reservation-tabs {
+    gap: 6px;
+  }
+
+  .reservations-page .reservation-tab {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+}

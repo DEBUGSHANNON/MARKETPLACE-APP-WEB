@@ -1,0 +1,375 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private UTM student profile information owned by an authenticated user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Student preferred display name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 120,
+          "description": "Authenticated UTM student email address (@graduate.utm.my)."
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 20,
+          "description": "Optional Malaysian mobile number."
+        },
+        "college": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "UTM residential college or off-campus designation."
+        },
+        "dormAddress": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "General block or residential area note."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when profile was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when profile was last updated."
+        }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "email",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Listing": {
+      "title": "Listing",
+      "description": "Public campus marketplace item or service published by a student.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Title of the item or service."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "description": "Detailed description of condition and specs."
+        },
+        "price": {
+          "type": "number",
+          "description": "Price in MYR."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Books", "Electronics", "Mobility", "Lifestyle", "Clothing", "Services", "Other"],
+          "description": "Marketplace category."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["item", "service"],
+          "description": "Whether the listing is a physical item or student service."
+        },
+        "condition": {
+          "type": "string",
+          "enum": ["New", "Like New", "Good", "Fair", "Used", "Not specified"],
+          "description": "Condition of the item."
+        },
+        "campusZone": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Preferred UTM campus pickup landmark."
+        },
+        "imageUrl": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Image path or HTTPS URL for the listing."
+        },
+        "sellerId": {
+          "type": "string",
+          "description": "UID of the student seller."
+        },
+        "sellerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Public display name of the seller."
+        },
+        "sellerVerifiedUtm": {
+          "type": "boolean",
+          "description": "Whether the seller authenticated with a @graduate.utm.my email."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["available", "reserved", "sold"],
+          "description": "Current availability status."
+        },
+        "reservedBy": {
+          "type": "string",
+          "description": "UID of the buyer who reserved the listing."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "price",
+        "category",
+        "type",
+        "condition",
+        "campusZone",
+        "imageUrl",
+        "sellerId",
+        "sellerName",
+        "sellerVerifiedUtm",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Reservation": {
+      "title": "Reservation",
+      "description": "Reservation and campus handover coordination record keyed by listingId.",
+      "type": "object",
+      "properties": {
+        "listingId": {
+          "type": "string",
+          "description": "ID of the reserved listing."
+        },
+        "listingTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Snapshot title of the reserved listing."
+        },
+        "listingImage": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Snapshot image of the reserved listing."
+        },
+        "listingPrice": {
+          "type": "number",
+          "description": "Snapshot price in MYR."
+        },
+        "buyerId": {
+          "type": "string",
+          "description": "UID of the reserving buyer."
+        },
+        "buyerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Display name of the buyer."
+        },
+        "sellerId": {
+          "type": "string",
+          "description": "UID of the listing seller."
+        },
+        "sellerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Display name of the seller."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "seller_proposed", "buyer_counter_proposed", "confirmed"],
+          "description": "Handover negotiation state."
+        },
+        "handoverLocation": {
+          "type": "string",
+          "maxLength": 150,
+          "description": "Agreed or proposed public UTM campus meeting point."
+        },
+        "handoverDate": {
+          "type": "string",
+          "maxLength": 10,
+          "description": "Proposed handover date (YYYY-MM-DD)."
+        },
+        "handoverTime": {
+          "type": "string",
+          "maxLength": 5,
+          "description": "Proposed handover time (HH:MM)."
+        },
+        "handoverNote": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Optional meeting instructions."
+        },
+        "handoverLat": {
+          "type": "number",
+          "description": "Latitude of campus meeting pin."
+        },
+        "handoverLng": {
+          "type": "number",
+          "description": "Longitude of campus meeting pin."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "listingId",
+        "listingTitle",
+        "listingImage",
+        "listingPrice",
+        "buyerId",
+        "buyerName",
+        "sellerId",
+        "sellerName",
+        "status",
+        "handoverLocation",
+        "handoverDate",
+        "handoverTime",
+        "handoverNote",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Private message between buyer and seller inside a reservation thread.",
+      "type": "object",
+      "properties": {
+        "senderId": {
+          "type": "string",
+          "description": "UID of the message sender."
+        },
+        "senderName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Display name of the sender."
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "Message body."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of message creation."
+        }
+      },
+      "required": [
+        "senderId",
+        "senderName",
+        "text",
+        "createdAt"
+      ]
+    },
+    "WishlistItem": {
+      "title": "WishlistItem",
+      "description": "Saved marketplace listing bookmarked by an authenticated student.",
+      "type": "object",
+      "properties": {
+        "listingId": {
+          "type": "string",
+          "description": "ID of the bookmarked listing."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Title of the bookmarked listing."
+        },
+        "price": {
+          "type": "number",
+          "description": "Price in MYR."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Books", "Electronics", "Mobility", "Lifestyle", "Clothing", "Services", "Other"],
+          "description": "Listing category."
+        },
+        "campusZone": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Preferred UTM campus pickup landmark."
+        },
+        "imageUrl": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Image path or HTTPS URL."
+        },
+        "sellerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Display name of the seller."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when saved to wishlist."
+        }
+      },
+      "required": [
+        "listingId",
+        "title",
+        "price",
+        "category",
+        "campusZone",
+        "imageUrl",
+        "sellerName",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user profiles accessible only to the owning user."
+    },
+    "/listings/{listingId}": {
+      "schema": { "$ref": "#/entities/Listing" },
+      "description": "Public campus marketplace listings browsable by everyone and managed by sellers."
+    },
+    "/reservations/{reservationId}": {
+      "schema": { "$ref": "#/entities/Reservation" },
+      "description": "Reservations keyed by listingId, accessible only to the buyer and seller."
+    },
+    "/reservations/{reservationId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Private chat messages between the buyer and seller of a reservation."
+    },
+    "/users/{userId}/wishlist/{listingId}": {
+      "schema": { "$ref": "#/entities/WishlistItem" },
+      "description": "Private wishlist bookmarks owned by the authenticated user."
+    }
+  }
+}

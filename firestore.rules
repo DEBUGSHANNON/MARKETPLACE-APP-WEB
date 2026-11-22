@@ -1,0 +1,359 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable hardened primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isUtmStudentEmailToken() {
+      return request.auth.token.email is string
+        && request.auth.token.email.lower().matches('^[^\\s@]+@graduate\\.utm\\.my$');
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && isUtmStudentEmailToken();
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidUrlOrLocalAsset(val) {
+      return val is string && val.size() <= 500 && (
+        val == '' ||
+        val.matches('^/src/assets/images/[a-zA-Z0-9_\\-]+\\.(jpg|png|webp)$') ||
+        val.matches('^https://.*')
+      );
+    }
+
+    // Validation Blueprint: UserProfile
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'email', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'email', 'phone', 'college', 'dormAddress', 'createdAt', 'updatedAt'])
+        && data.uid == request.auth.uid
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 60
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 120
+        && data.email.lower().matches('^[^\\s@]+@graduate\\.utm\\.my$')
+        && (!('phone' in data) || (data.phone is string && data.phone.size() <= 20))
+        && (!('college' in data) || (data.college is string && data.college.size() <= 80))
+        && (!('dormAddress' in data) || (data.dormAddress is string && data.dormAddress.size() <= 200))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Validation Blueprint: WishlistItem
+    function isValidWishlistItem(data, expectedListingId) {
+      return data.keys().hasAll([
+          'listingId', 'title', 'price', 'category',
+          'campusZone', 'imageUrl', 'sellerName', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'listingId', 'title', 'price', 'category',
+          'campusZone', 'imageUrl', 'sellerName', 'createdAt'
+        ])
+        && isValidId(data.listingId)
+        && data.listingId == expectedListingId
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 100
+        && data.price is number && data.price >= 0 && data.price <= 100000
+        && data.category in ['Books', 'Electronics', 'Mobility', 'Lifestyle', 'Clothing', 'Services', 'Other']
+        && data.campusZone is string && data.campusZone.size() >= 1 && data.campusZone.size() <= 80
+        && isValidUrlOrLocalAsset(data.imageUrl)
+        && data.sellerName is string && data.sellerName.size() >= 1 && data.sellerName.size() <= 60
+        && data.createdAt is timestamp;
+    }
+
+    // Validation Blueprint: Listing
+    function isValidListing(data) {
+      return data.keys().hasAll([
+          'title', 'description', 'price', 'category', 'type',
+          'condition', 'campusZone', 'imageUrl', 'sellerId',
+          'sellerName', 'sellerVerifiedUtm', 'status', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'title', 'description', 'price', 'category', 'type',
+          'condition', 'campusZone', 'imageUrl', 'sellerId',
+          'sellerName', 'sellerVerifiedUtm', 'status', 'reservedBy',
+          'createdAt', 'updatedAt'
+        ])
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 100
+        && data.description is string && data.description.size() >= 1 && data.description.size() <= 2000
+        && data.price is number && data.price >= 0 && data.price <= 100000
+        && data.category in ['Books', 'Electronics', 'Mobility', 'Lifestyle', 'Clothing', 'Services', 'Other']
+        && data.type in ['item', 'service']
+        && data.condition in ['New', 'Like New', 'Good', 'Fair', 'Used', 'Not specified']
+        && data.campusZone is string && data.campusZone.size() >= 1 && data.campusZone.size() <= 80
+        && isValidUrlOrLocalAsset(data.imageUrl)
+        && data.sellerId is string && isValidId(data.sellerId)
+        && data.sellerName is string && data.sellerName.size() >= 1 && data.sellerName.size() <= 60
+        && data.sellerVerifiedUtm is bool
+        && data.status in ['available', 'reserved', 'sold']
+        && (!('reservedBy' in data) || (data.reservedBy is string && isValidId(data.reservedBy)))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Validation Blueprint: Reservation
+    function isValidReservation(data) {
+      return data.keys().hasAll([
+          'listingId', 'listingTitle', 'listingImage', 'listingPrice',
+          'buyerId', 'buyerName', 'sellerId', 'sellerName', 'status',
+          'handoverLocation', 'handoverDate', 'handoverTime', 'handoverNote',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'listingId', 'listingTitle', 'listingImage', 'listingPrice',
+          'buyerId', 'buyerName', 'sellerId', 'sellerName', 'status',
+          'handoverLocation', 'handoverDate', 'handoverTime', 'handoverNote',
+          'handoverLat', 'handoverLng', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.listingId)
+        && data.listingTitle is string && data.listingTitle.size() >= 1 && data.listingTitle.size() <= 100
+        && isValidUrlOrLocalAsset(data.listingImage)
+        && data.listingPrice is number && data.listingPrice >= 0
+        && isValidId(data.buyerId)
+        && data.buyerName is string && data.buyerName.size() >= 1 && data.buyerName.size() <= 60
+        && isValidId(data.sellerId)
+        && data.sellerName is string && data.sellerName.size() >= 1 && data.sellerName.size() <= 60
+        && data.buyerId != data.sellerId
+        && data.status in ['pending', 'seller_proposed', 'buyer_counter_proposed', 'confirmed']
+        && data.handoverLocation is string && data.handoverLocation.size() <= 150
+        && data.handoverDate is string && data.handoverDate.size() <= 10
+        && data.handoverTime is string && data.handoverTime.size() <= 5
+        && data.handoverNote is string && data.handoverNote.size() <= 300
+        && (!('handoverLat' in data) || data.handoverLat == null || (data.handoverLat is number && data.handoverLat >= -90 && data.handoverLat <= 90))
+        && (!('handoverLng' in data) || data.handoverLng == null || (data.handoverLng is number && data.handoverLng >= -180 && data.handoverLng <= 180))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function hasCompleteHandover(data) {
+      return data.handoverLocation.size() > 0
+        && data.handoverDate.size() == 10
+        && data.handoverTime.size() == 5
+        && data.handoverLat is number
+        && data.handoverLng is number;
+    }
+
+    // Validation Blueprint: ChatMessage
+    function isValidChatMessage(data) {
+      return data.keys().hasAll(['senderId', 'senderName', 'text', 'createdAt'])
+        && data.keys().hasOnly(['senderId', 'senderName', 'text', 'createdAt'])
+        && data.senderId == request.auth.uid
+        && data.senderName is string && data.senderName.size() >= 1 && data.senderName.size() <= 60
+        && data.text is string && data.text.size() >= 1 && data.text.size() <= 1000
+        && data.createdAt is timestamp;
+    }
+
+    // Users collection: strict PII isolation
+    match /users/{userId} {
+      allow get: if isVerifiedUser() && isValidId(userId) && request.auth.uid == userId;
+      allow list: if false;
+      allow create: if isVerifiedUser()
+        && isValidId(userId)
+        && request.auth.uid == userId
+        && isValidUserProfile(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(userId)
+        && request.auth.uid == userId
+        && isValidUserProfile(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName', 'phone', 'college', 'dormAddress', 'updatedAt'
+        ]);
+      allow delete: if false;
+
+      // Private user wishlist subcollection
+      match /wishlist/{listingId} {
+        allow get: if isVerifiedUser() && isValidId(userId) && isValidId(listingId) && request.auth.uid == userId;
+        allow list: if isVerifiedUser() && isValidId(userId) && request.auth.uid == userId;
+        allow create: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(listingId)
+          && request.auth.uid == userId
+          && isValidWishlistItem(incoming(), listingId)
+          && incoming().createdAt == request.time;
+        allow update: if false;
+        allow delete: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(listingId)
+          && request.auth.uid == userId;
+      }
+    }
+
+    // Listings collection: public read, verified student create/edit, atomic buyer reserve
+    match /listings/{listingId} {
+      allow get: if isValidId(listingId);
+      allow list: if true;
+
+      allow create: if isVerifiedUser()
+        && isValidId(listingId)
+        && isValidListing(incoming())
+        && incoming().sellerId == request.auth.uid
+        && incoming().status == 'available'
+        && !('reservedBy' in incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedUser()
+        && isValidId(listingId)
+        && isValidListing(incoming())
+        && incoming().sellerId == existing().sellerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && existing().status != 'sold'
+        && (
+          // Action 1: Seller edits listing details while available or reserved
+          (
+            existing().sellerId == request.auth.uid
+            && incoming().status == existing().status
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'title', 'description', 'price', 'category', 'condition', 'type', 'campusZone', 'imageUrl', 'updatedAt'
+            ])
+          )
+          ||
+          // Action 2: Seller marks reserved item as sold
+          (
+            existing().sellerId == request.auth.uid
+            && existing().status == 'reserved'
+            && incoming().status == 'sold'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+          )
+          ||
+          // Action 3: Buyer reserves available listing atomically with reservation creation
+          (
+            existing().status == 'available'
+            && existing().sellerId != request.auth.uid
+            && incoming().status == 'reserved'
+            && incoming().reservedBy == request.auth.uid
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'reservedBy', 'updatedAt'])
+            && !exists(/databases/$(database)/documents/reservations/$(listingId))
+            && getAfter(/databases/$(database)/documents/reservations/$(listingId)).data.buyerId == request.auth.uid
+            && getAfter(/databases/$(database)/documents/reservations/$(listingId)).data.listingId == listingId
+            && getAfter(/databases/$(database)/documents/reservations/$(listingId)).data.status == 'pending'
+          )
+        );
+
+      allow delete: if isVerifiedUser()
+        && isValidId(listingId)
+        && existing().sellerId == request.auth.uid
+        && existing().status == 'available'
+        && !exists(/databases/$(database)/documents/reservations/$(listingId));
+    }
+
+    // Reservations collection: buyer/seller only
+    match /reservations/{reservationId} {
+      allow get: if isVerifiedUser()
+        && isValidId(reservationId)
+        && (existing().buyerId == request.auth.uid || existing().sellerId == request.auth.uid);
+
+      allow list: if isVerifiedUser()
+        && (existing().buyerId == request.auth.uid || existing().sellerId == request.auth.uid);
+
+      allow create: if isVerifiedUser()
+        && isValidId(reservationId)
+        && isValidReservation(incoming())
+        && reservationId == incoming().listingId
+        && incoming().buyerId == request.auth.uid
+        && incoming().status == 'pending'
+        && incoming().handoverLocation == ''
+        && incoming().handoverDate == ''
+        && incoming().handoverTime == ''
+        && incoming().handoverNote == ''
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && get(/databases/$(database)/documents/listings/$(reservationId)).data.status == 'available'
+        && get(/databases/$(database)/documents/listings/$(reservationId)).data.sellerId == incoming().sellerId
+        && get(/databases/$(database)/documents/listings/$(reservationId)).data.title == incoming().listingTitle
+        && getAfter(/databases/$(database)/documents/listings/$(reservationId)).data.status == 'reserved'
+        && getAfter(/databases/$(database)/documents/listings/$(reservationId)).data.reservedBy == request.auth.uid;
+
+      allow update: if isVerifiedUser()
+        && isValidId(reservationId)
+        && isValidReservation(incoming())
+        && existing().status != 'confirmed'
+        && incoming().listingId == existing().listingId
+        && incoming().buyerId == existing().buyerId
+        && incoming().sellerId == existing().sellerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action 1: Seller proposes or updates handover
+          (
+            existing().sellerId == request.auth.uid
+            && existing().status in ['pending', 'buyer_counter_proposed']
+            && incoming().status == 'seller_proposed'
+            && hasCompleteHandover(incoming())
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'status', 'handoverLocation', 'handoverDate', 'handoverTime',
+              'handoverNote', 'handoverLat', 'handoverLng', 'updatedAt'
+            ])
+          )
+          ||
+          // Action 2: Buyer counter-proposes handover
+          (
+            existing().buyerId == request.auth.uid
+            && existing().status == 'seller_proposed'
+            && incoming().status == 'buyer_counter_proposed'
+            && hasCompleteHandover(incoming())
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'status', 'handoverLocation', 'handoverDate', 'handoverTime',
+              'handoverNote', 'handoverLat', 'handoverLng', 'updatedAt'
+            ])
+          )
+          ||
+          // Action 3: Confirm handover
+          (
+            (
+              (existing().buyerId == request.auth.uid && existing().status == 'seller_proposed')
+              ||
+              (existing().sellerId == request.auth.uid && existing().status == 'buyer_counter_proposed')
+            )
+            && hasCompleteHandover(existing())
+            && incoming().status == 'confirmed'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+          )
+        );
+
+      allow delete: if false;
+
+      // Private chat subcollection: Master Gate to parent reservation
+      match /messages/{messageId} {
+        function isChatParticipant() {
+          let res = get(/databases/$(database)/documents/reservations/$(reservationId)).data;
+          return isVerifiedUser() && (res.buyerId == request.auth.uid || res.sellerId == request.auth.uid);
+        }
+
+        allow get: if isValidId(reservationId) && isValidId(messageId) && isChatParticipant();
+        allow list: if isValidId(reservationId) && isChatParticipant();
+        allow create: if isValidId(reservationId)
+          && isValidId(messageId)
+          && isChatParticipant()
+          && isValidChatMessage(incoming())
+          && incoming().createdAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+  }
+}

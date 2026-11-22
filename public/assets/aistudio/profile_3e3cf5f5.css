@@ -1,0 +1,284 @@
+
+:root {
+  --cream: #F5F8EF;
+  --green: #08482D;
+  --mint: #DAE7C7;
+  --muted: #506556;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--green);
+  font-family: Inter, Arial, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.profile-navbar {
+  min-height: 86px;
+  padding: 15px 6%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #dce7d5;
+}
+
+.profile-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 23px;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.profile-logo-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  background: var(--green);
+  color: white;
+  border-radius: 13px;
+}
+
+.profile-navbar nav {
+  display: flex;
+  gap: 25px;
+  font-weight: 600;
+}
+
+.profile-main {
+  width: min(850px, 90%);
+  margin: 55px auto 100px;
+}
+
+.back-link {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.profile-heading {
+  margin: 45px 0 35px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.profile-heading h1 {
+  font-size: clamp(48px, 7vw, 85px);
+  letter-spacing: -.07em;
+  margin: 15px 0;
+}
+
+.profile-heading em {
+  color: #659A70;
+}
+
+.profile-heading p {
+  color: var(--muted);
+}
+
+.profile-card {
+  background: white;
+  border: 1px solid #dce7d5;
+  border-radius: 28px;
+  padding: 40px;
+  box-shadow: 0 20px 50px #08482D0D;
+}
+
+.profile-top {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-bottom: 25px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #dce7d5;
+}
+
+.profile-avatar {
+  width: 70px;
+  height: 70px;
+  background: var(--mint);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 30px;
+}
+
+.profile-top h2 {
+  margin: 0 0 6px;
+}
+
+.profile-top p {
+  margin: 0;
+  color: var(--muted);
+}
+
+#profileForm {
+  display: grid;
+  gap: 23px;
+}
+
+.form-field {
+  display: grid;
+  gap: 9px;
+}
+
+.form-field label {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  padding: 15px 17px;
+  border: 1px solid #cadbc3;
+  border-radius: 13px;
+  font: inherit;
+  color: var(--green);
+  background: #fff;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  outline: 2px solid #659A70;
+}
+
+.form-field input[readonly] {
+  background: #edf2e8;
+}
+
+.form-field small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.verification-box {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  background: var(--cream);
+  padding: 20px;
+  border-radius: 15px;
+  font-size: 14px;
+}
+
+.save-button {
+  padding: 17px 25px;
+  border: none;
+  border-radius: 50px;
+  background: var(--green);
+  color: white;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.save-button:hover {
+  background: #126B45;
+}
+
+.save-button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+#profileMessage {
+  color: var(--muted);
+  text-align: center;
+  margin: 0;
+}
+
+@media (max-width: 650px) {
+  .profile-navbar {
+    flex-wrap: wrap;
+  }
+
+  .profile-navbar nav {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .profile-card {
+    padding: 25px 20px;
+  }
+
+  .profile-main {
+    margin-top: 30px;
+  }
+
+  .verification-box {
+    flex-direction: column;
+  }
+}
+
+/* ==================================
+   MALAYSIAN PHONE NUMBER INPUT
+================================== */
+
+.phone-input-group {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  border: 1px solid #cadbc3;
+  border-radius: 13px;
+  overflow: hidden;
+  background: #ffffff;
+  transition: border-color 0.2s;
+}
+
+.phone-input-group:focus-within {
+  border-color: #659A70;
+  outline: 2px solid #659A70;
+}
+
+.phone-prefix {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 18px;
+  background: #DAE7C7;
+  color: #08482D;
+  font-weight: 800;
+  font-size: 15px;
+  white-space: nowrap;
+  border-right: 1px solid #cadbc3;
+}
+
+.phone-input-group #profilePhone {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  border-radius: 0;
+  outline: none;
+  padding: 15px 17px;
+  background: white;
+}
+
+.phone-input-group #profilePhone:focus {
+  outline: none;
+}
+
+@media (max-width: 600px) {
+  .phone-prefix {
+    padding: 0 12px;
+    font-size: 13px;
+  }
+}

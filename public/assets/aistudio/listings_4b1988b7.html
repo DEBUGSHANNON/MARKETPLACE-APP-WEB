@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Listings | CampusTrade</title>  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="home.css">
+
+<!-- Leaflet map styles -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<!-- Leaflet map library -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#"><span class="brand-mark">C</span> CampusTrade</a>
+    <nav class="main-nav" aria-label="Main navigation">
+  <a href="index.html">Home</a>
+  <a href="listings.html" class="active" aria-current="page">Listings</a>
+  <a href="reservations.html">Reservations</a>
+</nav>
+    <div class="account-actions">
+      <button type="button" id="openAuthModal"
+        class="btn btn-primary">
+  Sign In
+</button>
+<span id="user-label" class="muted">Not signed in</span>
+      <button id="signout-btn" class="btn btn-ghost hidden">Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">YOUR CAMPUS. YOUR COMMUNITY.</p>
+        <h1>Give good things<br><span>a second life.</span></h1>
+        <p class="hero-text">Buy, sell, exchange and discover student services — all in one campus marketplace.</p>
+        <a class="btn btn-primary" href="#marketplace">Explore listings <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="hero-card">
+        <div class="hero-card-top"><span class="dot"></span> STUDENT-TO-STUDENT</div>
+        <div class="hero-illustration" aria-hidden="true">
+          <div class="circle circle-one"></div><div class="circle circle-two"></div>
+          <div class="package">📦</div><div class="book">📚</div><div class="plant">🌱</div>
+        </div>
+        <div class="hero-card-bottom"><strong>Trade locally.</strong><span>Meet safely on campus.</span></div>
+      </div>
+    </section>
+
+    <section class="trust-strip">
+      <div><strong>01</strong><span>Student email verification</span></div>
+      <div><strong>02</strong><span>Clear listing availability</span></div>
+      <div><strong>03</strong><span>Campus handover planning</span></div>
+    </section>
+<div id="authModal" class="auth-overlay" hidden>
+  <div class="auth-dialog" role="dialog"
+       aria-modal="true" aria-labelledby="authModalTitle">
+    <button type="button" id="closeAuthModal"
+            class="auth-close" aria-label="Close">×</button>
+    <h2 id="authModalTitle">Welcome to CampusTrade</h2>
+    <section id="auth-panel" class="panel auth-panel">
+      <div>
+        <p class="eyebrow">JOIN THE COMMUNITY</p>
+        <h2>Student account</h2>
+        <p class="muted">Create an account with your university email or sign in.</p>
+      </div>
+      <form id="auth-form" class="auth-form">
+        <label>Email<input id="auth-email" type="email" placeholder="you@graduate.utm.my" required></label>
+        <label>Password<input id="auth-password" type="password" minlength="6" placeholder="At least 6 characters" required></label>
+        <div class="button-row">
+          <button class="btn btn-primary" type="submit" id="signup-btn">Create account</button>
+          <button class="btn btn-secondary" type="button" id="signin-btn">Sign in</button>
+        </div>
+        <p id="auth-message" class="form-message" role="status"></p>
+      </form>
+    </section>
+      </div>
+</div>
+
+<div class="section-heading">
+  <div>
+    <p class="eyebrow">STUDENT MARKETPLACE</p>
+    <h2>Browse Listings</h2>
+  </div>
+
+  <button
+    type="button"
+    id="openCreateListing"
+    class="btn btn-primary"
+  >
+    + Create Listing
+  </button>
+</div>
+
+    <section id="create-panel" class="panel hidden">
+      <div class="section-heading">
+        <div><p class="eyebrow">SHARE WITH CAMPUS</p><h2>Create a listing</h2></div>
+        <span class="verified-pill">✓ Verified students</span>
+      </div>
+      <form id="listing-form" class="listing-form">
+        <label>Listing title<input id="listing-title" maxlength="70" required placeholder="e.g. Intro to Programming textbook"></label>
+        <label>Type<select id="listing-type"><option value="item">Item for sale</option><option value="service">Service offered</option></select></label>
+        <label>Category<select id="listing-category"><option>Books</option><option>Electronics</option><option>Clothing</option><option>Lifestyle</option><option>Services</option><option>Other</option></select></label>
+        <label>Price (RM)<input id="listing-price" type="number" min="0" step="0.01" required placeholder="e.g. 25"></label>
+        <label class="full-width">Description<textarea id="listing-description" rows="3" maxlength="500" required placeholder="Describe the condition, details or service..."></textarea></label>
+        <label class="full-width">Image URL (optional)<input id="listing-image" type="url" placeholder="https://..."></label>
+        <button class="btn btn-primary full-width" type="submit">Publish listing</button>
+        <p id="listing-message" class="form-message full-width" role="status"></p>
+      </form>
+    </section>
+
+    <section id="marketplace" class="market-section">
+      <div class="section-heading">
+        <div><p class="eyebrow">FIND YOUR NEXT GOOD THING</p><h2>Campus marketplace</h2><p class="muted">Browse items and services shared by students.</p></div>
+      </div>
+      <div class="filters">
+        <input id="search-input" type="search" placeholder="Search listings..." aria-label="Search listings">
+        <select id="filter-category" aria-label="Filter by category">
+          <option value="all">All categories</option><option>Books</option><option>Electronics</option><option>Clothing</option><option>Lifestyle</option><option>Services</option><option>Other</option>
+        </select>
+        <select id="filter-type" aria-label="Filter by listing type">
+          <option value="all">Items & services</option><option value="item">Items</option><option value="service">Services</option>
+        </select>
+        <select id="filter-status" aria-label="Filter by availability">
+          <option value="all">All availability</option><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold</option>
+        </select>
+      </div>
+      <div id="listing-grid" class="listing-grid">
+        <div class="empty-state">Connect Firebase to load marketplace listings.</div>
+      </div>
+    </section>
+
+    <section id="reservations" class="panel hidden">
+      <div class="section-heading"><div><p class="eyebrow">YOUR ACTIVITY</p><h2>My reservations</h2></div></div>
+      <div id="reservation-list" class="reservation-list"></div>
+    </section>
+
+    <section id="how-it-works" class="how-section">
+      <p class="eyebrow">SIMPLE. LOCAL. CONVENIENT.</p><h2>How CampusTrade works</h2>
+      <div class="steps">
+        <article><span>1</span><h3>Verify</h3><p>Sign up with your university email and verify your account.</p></article>
+        <article><span>2</span><h3>Discover</h3><p>Search categories, compare listings and check availability.</p></article>
+        <article><span>3</span><h3>Arrange</h3><p>Reserve an item and agree on a public campus handover point.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer><a class="brand" href="#"><span class="brand-mark">C</span> CampusTrade</a><span>Made for student communities.</span></footer>
+  <div id="toast" class="toast" role="status"></div>
+  <script type="module" src="app.js"></script>
+  <!-- CampusTrade Handover Popup -->
+<div id="handoverModal" class="handover-overlay" hidden>
+  <div class="handover-dialog">
+
+    <button
+      type="button"
+      id="closeHandoverModal"
+      class="handover-close"
+      aria-label="Close"
+    >×</button>
+
+    <h2>Arrange Your Handover</h2>
+    <p class="handover-subtitle">
+      Choose a convenient and safe campus meeting point.
+    </p>
+
+    <form id="handoverForm">
+
+      <label for="handoverLocationInput">Meeting Location</label>
+      <input
+        id="handoverLocationInput"
+        type="text"
+        placeholder="e.g. UTM Library Main Entrance"
+        maxlength="150"
+        required
+      />
+
+      <div class="handover-location-actions">
+  <button
+    type="button"
+    id="searchHandoverLocation"
+    class="handover-search-btn"
+  >
+    🔍 Search Location
+  </button>
+</div>
+
+<p id="handoverSearchStatus" aria-live="polite"></p>
+
+<div id="handoverMap"></div>
+
+      <div class="handover-fields">
+        <div>
+          <label for="handoverDateInput">Handover Date</label>
+          <input
+            id="handoverDateInput"
+            type="date"
+            required
+          />
+        </div>
+
+        <div>
+          <label>Handover Time</label>
+          <div class="handover-time">
+            <select id="handoverHour" aria-label="Hour"></select>
+            <span>:</span>
+            <select id="handoverMinute" aria-label="Minute"></select>
+          </div>
+        </div>
+      </div>
+
+      <label for="handoverNoteInput">Special Notes (Optional)</label>
+      <textarea
+        id="handoverNoteInput"
+        rows="3"
+        maxlength="300"
+        placeholder="e.g. I'll be waiting near the main entrance. Please message me when you arrive."
+      ></textarea>
+
+      <p class="handover-hint">
+        Meet at a public campus location. Avoid sharing private information.
+      </p>
+
+      <div class="handover-actions">
+        <button type="button" id="cancelHandoverModal">
+          Cancel
+        </button>
+        <button type="submit" id="submitHandover">
+          Send Proposal
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- CampusTrade Messages Popup -->
+<div id="chatModal" class="chat-overlay" hidden>
+  <section
+    class="chat-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="chatTitle"
+  >
+    <header class="chat-header">
+      <div>
+        <h2 id="chatTitle">CampusTrade Messages</h2>
+        <p id="chatSubtitle">Private student conversation</p>
+      </div>
+
+      <button
+        type="button"
+        id="closeChatModal"
+        class="chat-close"
+        aria-label="Close messages"
+      >×</button>
+    </header>
+
+    <div
+      id="chatMessages"
+      class="chat-messages"
+      role="log"
+      aria-live="polite"
+      aria-label="Conversation messages"
+    >
+      <p class="chat-empty">No messages yet.</p>
+    </div>
+
+    <div id="chatEmojiPanel" class="chat-emoji-panel" hidden>
+      <button type="button" data-emoji="😊">😊</button>
+      <button type="button" data-emoji="😂">😂</button>
+      <button type="button" data-emoji="👍">👍</button>
+      <button type="button" data-emoji="❤️">❤️</button>
+      <button type="button" data-emoji="🎉">🎉</button>
+      <button type="button" data-emoji="🙏">🙏</button>
+      <button type="button" data-emoji="👋">👋</button>
+      <button type="button" data-emoji="📍">📍</button>
+      <button type="button" data-emoji="🤝">🤝</button>
+      <button type="button" data-emoji="✨">✨</button>
+      <button type="button" data-emoji="😄">😄</button>
+      <button type="button" data-emoji="💜">💜</button>
+    </div>
+
+    <form id="chatForm" class="chat-compose">
+      <button
+        type="button"
+        id="chatEmojiToggle"
+        class="chat-icon-btn"
+        aria-label="Choose emoji"
+        aria-expanded="false"
+      >😊</button>
+
+      <textarea
+        id="chatInput"
+        rows="1"
+        maxlength="1000"
+        placeholder="Type a message..."
+        aria-label="Type your message"
+        required
+      ></textarea>
+
+      <button
+        type="submit"
+        id="chatSend"
+        class="chat-send-btn"
+      >Send ➤</button>
+    </form>
+
+    <p class="chat-keyboard-hint">
+      Enter to send · Shift + Enter for a new line
+    </p>
+  </section>
+</div>
+
+<!-- PRODUCT DETAILS POPUP -->
+<div id="productModal" class="product-modal" hidden>
+  <div class="product-modal-backdrop" data-close-product></div>
+
+  <div class="product-modal-dialog"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="productModalTitle">
+
+    <button type="button"
+            id="closeProductModal"
+            class="product-modal-close"
+            aria-label="Close product details">×</button>
+
+    <div class="product-modal-layout">
+
+      <div id="productModalImage"
+           class="product-modal-image"></div>
+
+      <div class="product-modal-info">
+
+        <span id="productModalCategory"
+              class="product-modal-category"></span>
+
+        <h2 id="productModalTitle"></h2>
+
+        <div id="productModalPrice"
+             class="product-modal-price"></div>
+
+        <span id="productModalStatus"
+              class="product-modal-status"></span>
+
+        <h3>About this listing</h3>
+        <p id="productModalDescription"></p>
+
+        <div class="product-modal-meta">
+          <p>
+            <strong>Condition:</strong>
+            <span id="productModalCondition"></span>
+          </p>
+
+          <p>
+            <strong>Seller:</strong>
+            <span id="productModalSeller"></span>
+          </p>
+        </div>
+
+        <button type="button"
+                id="productModalReserve"
+                class="product-modal-reserve">
+          Reserve this item ↗
+        </button>
+
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

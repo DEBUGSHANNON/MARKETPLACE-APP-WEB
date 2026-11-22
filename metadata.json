@@ -1,0 +1,6 @@
+{
+  "name": "CampusTrade UTM",
+  "description": "Interactive 3D campus marketplace for Universiti Teknologi Malaysia (UTM) featuring an interactive Orbit Sphere discovery experience, object detail pages, campus handover mapping, and real-time student chat.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

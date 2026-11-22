@@ -1,0 +1,142 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedInAndVerifiedStudent() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.matches('^[^@]+@graduate\\.utm\\.my$');
+    }
+
+    match /listings/{listingId} {
+      allow read: if signedInAndVerifiedStudent();
+
+      allow create: if signedInAndVerifiedStudent()
+        && request.resource.data.sellerId == request.auth.uid
+        && request.resource.data.status == 'available';
+
+      allow update: if signedInAndVerifiedStudent()
+        && resource.data.sellerId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            'title', 'description', 'price',
+            'category', 'type', 'imageUrl'
+          ]);
+
+      allow update: if signedInAndVerifiedStudent()
+        && resource.data.status == 'available'
+        && resource.data.sellerId != request.auth.uid
+        && request.resource.data.status == 'reserved'
+        && request.resource.data.reservedBy == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'reservedBy'])
+        && !exists(/databases/$(database)/documents/reservations/$(listingId))
+        && getAfter(/databases/$(database)/documents/reservations/$(listingId)).data.buyerId == request.auth.uid
+        && getAfter(/databases/$(database)/documents/reservations/$(listingId)).data.sellerId == resource.data.sellerId
+        && getAfter(/databases/$(database)/documents/reservations/$(listingId)).data.listingId == listingId
+        && getAfter(/databases/$(database)/documents/reservations/$(listingId)).data.status == 'pending';
+
+      allow delete: if signedInAndVerifiedStudent()
+        && resource.data.sellerId == request.auth.uid;
+    }
+
+    match /reservations/{reservationId} {
+      allow read: if signedInAndVerifiedStudent()
+        && (
+          resource.data.buyerId == request.auth.uid
+          || resource.data.sellerId == request.auth.uid
+        );
+
+      allow create: if signedInAndVerifiedStudent()
+        && reservationId == request.resource.data.listingId
+        && request.resource.data.buyerId == request.auth.uid
+        && request.resource.data.buyerId != request.resource.data.sellerId
+        && request.resource.data.status == 'pending'
+        && request.resource.data.handoverLocation == ''
+        && request.resource.data.handoverDate == ''
+        && request.resource.data.handoverTime == ''
+        && request.resource.data.keys().hasOnly([
+          'listingId', 'listingTitle', 'buyerId',
+          'sellerId', 'status', 'handoverLocation',
+          'handoverDate', 'handoverTime', 'createdAt'
+        ])
+        && request.resource.data.createdAt == request.time
+        && get(/databases/$(database)/documents/listings/$(reservationId)).data.status == 'available'
+        && get(/databases/$(database)/documents/listings/$(reservationId)).data.sellerId == request.resource.data.sellerId
+        && get(/databases/$(database)/documents/listings/$(reservationId)).data.title == request.resource.data.listingTitle
+        && getAfter(/databases/$(database)/documents/listings/$(reservationId)).data.status == 'reserved'
+        && getAfter(/databases/$(database)/documents/listings/$(reservationId)).data.reservedBy == request.auth.uid;
+
+      allow update: if signedInAndVerifiedStudent()
+        && resource.data.buyerId == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            'handoverLocation',
+            'handoverDate',
+            'handoverTime'
+          ])
+        && request.resource.data.handoverLocation is string
+        && request.resource.data.handoverDate is string
+        && request.resource.data.handoverTime is string
+        && request.resource.data.handoverLocation.size() <= 150
+        && request.resource.data.handoverDate.size() <= 10
+        && request.resource.data.handoverTime.size() <= 5;
+
+allow update: if signedInAndVerifiedStudent()
+  && resource.data.sellerId == request.auth.uid
+  && resource.data.status == 'pending'
+  && resource.data.handoverLocation is string
+  && resource.data.handoverDate is string
+  && resource.data.handoverTime is string
+  && resource.data.handoverLocation.size() > 0
+  && resource.data.handoverDate.size() > 0
+  && resource.data.handoverTime.size() > 0
+  && request.resource.data.status == 'confirmed'
+  && request.resource.data.diff(resource.data).affectedKeys()
+    .hasOnly(['status']);
+
+allow update: if signedInAndVerifiedStudent()
+  && resource.data.sellerId == request.auth.uid
+  && resource.data.status == 'pending'
+  && resource.data.handoverLocation is string
+  && resource.data.handoverLocation.size() > 0
+  && resource.data.handoverDate is string
+  && resource.data.handoverDate.size() > 0
+  && resource.data.handoverTime is string
+  && resource.data.handoverTime.size() > 0
+  && request.resource.data.status == 'counter_proposed'
+  && request.resource.data.diff(resource.data).affectedKeys()
+    .hasOnly([
+      'status',
+      'handoverLocation',
+      'handoverDate',
+      'handoverTime'
+    ])
+  && request.resource.data.handoverLocation is string
+  && request.resource.data.handoverLocation.size() > 0
+  && request.resource.data.handoverLocation.size() <= 150
+  && request.resource.data.handoverDate is string
+  && request.resource.data.handoverDate.size() == 10
+  && request.resource.data.handoverTime is string
+  && request.resource.data.handoverTime.size() == 5;
+
+      allow delete: if false;
+      
+aly& resource.data.buyerId == request.auth.uid
+  && resource.data.status == 'counter_proposed'
+  && resource.data.handoverLocation is string
+  && resource.data.handoverLocation.size() > 0
+  && resource.data.handoverDate is string
+  && resource.data.handoverDate.size() > 0
+  && resource.data.handoverTime is string
+  && resource.data.handoverTime.size() > 0
+  && request.resource.data.status == 'confirmed'
+  && request.resource.data.diff(resource.data).affectedKeys()
+    .hasOnly(['status']);
+
+    }
+  }
+}

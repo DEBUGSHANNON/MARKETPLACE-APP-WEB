@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Listings | CampusTrade</title>
+  <link rel="stylesheet" href="my-listings.css">
+</head>
+<body>
+  <header class="my-navbar">
+    <a href="index.html" class="my-logo">
+      <span class="my-logo-icon">C</span>
+      CampusTrade
+    </a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="listings.html">Listings</a>
+      <a href="reservations.html">Reservations</a>
+    </nav>
+  </header>
+
+  <main class="my-main">
+    <a class="my-back" href="index.html">← Back to Home</a>
+
+    <div class="my-heading">
+      <span class="my-kicker">✳ YOUR CAMPUS MARKETPLACE</span>
+      <h1>My <em>Listings.</em></h1>
+      <p>Manage the items and services you've shared with UTM students.</p>
+    </div>
+
+    <div class="my-toolbar">
+      <div class="my-stats">
+        <div><strong id="totalListings">0</strong><span>Total</span></div>
+        <div><strong id="availableListings">0</strong><span>Available</span></div>
+        <div><strong id="reservedListings">0</strong><span>Reserved</span></div>
+      </div>
+      <a class="my-add-button" href="listings.html">
+        + Add New Listing
+      </a>
+    </div>
+
+    <p id="myListingsMessage" role="status" aria-live="polite">
+      Loading your listings...
+    </p>
+
+    <section id="myListingsGrid" class="my-grid"
+             aria-label="Your listings"></section>
+  </main>
+
+  <!-- EDIT LISTING POPUP -->
+  <div id="myEditModal" class="my-modal" hidden>
+    <div class="my-modal-panel" role="dialog"
+         aria-modal="true" aria-labelledby="myEditTitle">
+      <button type="button" id="myEditClose"
+              class="my-modal-close" aria-label="Close">×</button>
+
+      <h2 id="myEditTitle">Edit Listing</h2>
+      <p>Update your listing information.</p>
+
+      <form id="myEditForm">
+        <label for="myEditName">Product Title</label>
+        <input id="myEditName" maxlength="100" required>
+
+        <label for="myEditDescription">Description</label>
+        <textarea id="myEditDescription" rows="4"
+                  maxlength="2000" required></textarea>
+
+        <label for="myEditPrice">Price (RM)</label>
+        <input id="myEditPrice" type="number" min="0"
+               step="0.01" required>
+
+        <label for="myEditCategory">Category</label>
+        <input id="myEditCategory" maxlength="60" required>
+
+        <label for="myEditCondition">Condition</label>
+        <select id="myEditCondition">
+          <option value="New">New</option>
+          <option value="Like New">Like New</option>
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+          <option value="Used">Used</option>
+          <option value="Not specified">Not specified</option>
+        </select>
+
+        <button id="myEditSave" class="my-primary" type="submit">
+          Save Changes ↗
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="my-listings.js"></script>
+</body>
+</html>

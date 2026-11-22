@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusTrade | Your Campus Marketplace</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="home.css">
+</head>
+<body class="home-page">
+
+  <!-- NAVIGATION -->
+  <header class="home-navbar">
+    <a href="index.html" class="home-logo">
+      <span class="home-logo-icon">C</span>
+      CampusTrade
+    </a>
+
+    <nav class="home-links" aria-label="Main navigation">
+      <a href="index.html" class="selected">Home</a>
+      <a href="listings.html">Listings</a>
+      <a href="reservations.html">Reservations</a>
+    </nav>
+
+    <div class="home-account">
+      <button id="homeProfileButton"
+              class="home-profile-button"
+              type="button"
+              aria-label="Account"
+              aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="23" height="23"
+             fill="none" stroke="currentColor"
+             stroke-width="1.8" aria-hidden="true">
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M4.5 21c0-4 3.3-7 7.5-7s7.5 3 7.5 7"></path>
+        </svg>
+      </button>
+      <span id="homeUsername" class="home-username" hidden></span>
+
+      <div id="homeProfileMenu" class="home-profile-menu" hidden>
+        <a href="profile.html">Personal Profile</a>
+        <a href="wishlist.html">Wishlist</a>
+        <a href="my-listings.html">My Listings</a>
+        <a href="messages.html">Messages</a>
+        <a href="history.html">Transaction History</a>
+        <button type="button" id="homeSignOut">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="home-hero">
+      <div class="home-hero-content">
+<span class="home-kicker">✳ EXCLUSIVELY FOR THE UTM COMMUNITY</span>
+        
+<h1>
+  Good things<br>
+  deserve a<br>
+  <span>second life.</span>
+</h1>
+
+
+       <p>
+  Your student-to-student marketplace at Universiti Teknologi Malaysia.
+  Buy pre-loved essentials, sell what you no longer need, and
+  connect with fellow UTM students — all in one place.
+</p>
+
+        <div class="home-hero-actions">
+          <a href="listings.html" class="home-cta">
+            Explore Listings <span aria-hidden="true">↗</span>
+          </a>
+          <a href="#discover" class="home-text-link">
+            See what's trending ↓
+          </a>
+        </div>
+
+        <span class="home-doodle home-doodle-one" aria-hidden="true">✳</span>
+        <span class="home-doodle home-doodle-two" aria-hidden="true">✦</span>
+      </div>
+
+      <div class="home-hero-note">
+        <span class="home-note-star">✳</span>
+        <span>Less waste.<br>More discoveries.</span>
+      </div>
+    </section>
+
+    <!-- MARKETPLACE CAROUSEL -->
+    <section id="discover" class="home-discover">
+      <div class="home-section-heading">
+        <div>
+          <span class="home-kicker">DISCOVER WHAT'S AROUND UTM</span>
+<h2>Finds from <em>fellow UTM students.</em></h2>
+        </div>
+        <a href="listings.html" class="home-outline-link">
+          View all listings ↗
+        </a>
+      </div>
+
+      <p class="home-discover-description">
+  From textbooks and calculators to dorm essentials,
+  discover items and services listed by the UTM community.
+</p>
+
+      <div class="home-carousel-area">
+        <div id="homeCarousel" class="home-carousel">
+          <div class="home-carousel-loading">
+            Marketplace discoveries are coming soon.
+          </div>
+        </div>
+      </div>
+
+      <p class="home-carousel-hint">
+        ← Drag to explore →
+      </p>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="home-how">
+      <span class="home-kicker">SIMPLE & STUDENT-FRIENDLY</span>
+<h2>One campus. <em>One community.</em></h2>
+      
+<div class="home-how-grid">
+  <article>
+    <span class="home-step-number">01</span>
+    <div class="home-step-icon">✉</div>
+    <h3>Verify your UTM email</h3>
+    <p>Join the marketplace using your @graduate.utm.my email.</p>
+  </article>
+
+  <article>
+    <span class="home-step-number">02</span>
+    <div class="home-step-icon">✳</div>
+    <h3>Explore UTM listings</h3>
+    <p>Find textbooks, electronics, hostel essentials and student services.</p>
+  </article>
+
+  <article>
+    <span class="home-step-number">03</span>
+    <div class="home-step-icon">↗</div>
+    <h3>Meet safely on campus</h3>
+    <p>Reserve, chat and arrange handovers at public locations around UTM.</p>
+  </article>
+</div>
+
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="home-final">
+      <span class="home-kicker">YOUR CAMPUS, YOUR MARKETPLACE</span>
+<h2>Something you need.<br>
+Someone at <em>UTM has it.</em></h2>      
+<a href="listings.html" class="home-cta">
+        Start Exploring ↗
+      </a>
+    </section>
+  </main>
+
+  <footer class="home-footer">
+    <strong>CampusTrade ✳</strong>
+    <span>Made for student communities.</span>
+  </footer>
+
+  <script type="module" src="home.js"></script>
+<div id="homeToast" class="home-toast" role="status" aria-live="polite" hidden></div>
+
+<!-- HOME STUDENT AUTHENTICATION POPUP -->
+<div id="homeAuthModal" class="home-auth-overlay" hidden>
+  <section class="home-auth-dialog"
+           role="dialog"
+           aria-modal="true"
+           aria-labelledby="homeAuthTitle">
+
+    <button type="button"
+            id="closeHomeAuth"
+            class="home-auth-close"
+            aria-label="Close sign in">×</button>
+
+    <span class="home-kicker">✳ UTM STUDENT COMMUNITY</span>
+    <h2 id="homeAuthTitle">Welcome back.</h2>
+    <p class="home-auth-subtitle">
+      Sign in or create your CampusTrade account.
+    </p>
+
+    <form id="homeAuthForm">
+      <label for="homeAuthEmail">UTM Student Email</label>
+      <input id="homeAuthEmail"
+             type="email"
+             placeholder="you@graduate.utm.my"
+             autocomplete="email"
+             required>
+
+      <label for="homeAuthPassword">Password</label>
+      <input id="homeAuthPassword"
+             type="password"
+             minlength="6"
+             placeholder="Enter your password"
+             autocomplete="current-password"
+             required>
+
+      <p id="homeAuthMessage" role="status"></p>
+
+      <button type="submit"
+              id="homeLoginButton"
+              class="home-auth-primary">
+        Sign In
+      </button>
+
+      <button type="button"
+              id="homeSignupButton"
+              class="home-auth-secondary">
+        Create New Account
+      </button>
+
+      <button type="button"
+              id="homeResendVerification"
+              class="home-auth-text-button" hidden>
+        Resend verification email
+      </button>
+    </form>
+  </section>
+</div>
+
+<!-- PRODUCT DETAILS POPUP -->
+<div id="productModal" class="product-modal" hidden>
+  <div class="product-modal-backdrop" data-close-product></div>
+
+  <div class="product-modal-dialog"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="productModalTitle">
+
+    <button
+      type="button"
+      id="closeProductModal"
+      class="product-modal-close"
+      aria-label="Close product details"
+    >×</button>
+
+    <div class="product-modal-layout">
+      <div id="productModalImage" class="product-modal-image"></div>
+
+      <div class="product-modal-info">
+        <span id="productModalCategory" class="product-modal-category"></span>
+        <h2 id="productModalTitle"></h2>
+        <div id="productModalPrice" class="product-modal-price"></div>
+
+        <span id="productModalStatus" class="product-modal-status"></span>
+
+        <h3>About this item</h3>
+        <p id="productModalDescription"></p>
+
+        <div class="product-modal-meta">
+          <p><strong>Condition:</strong> <span id="productModalCondition"></span></p>
+          <p><strong>Seller:</strong> <span id="productModalSeller"></span></p>
+        </div>
+
+        <button type="button" id="productModalReserve" class="product-modal-reserve">
+          Reserve this item ↗
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

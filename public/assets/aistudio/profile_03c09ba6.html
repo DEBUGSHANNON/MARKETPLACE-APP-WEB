@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile | CampusTrade</title>
+  <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+
+  <header class="profile-navbar">
+    <a href="index.html" class="profile-logo">
+      <span class="profile-logo-icon">C</span>
+      CampusTrade
+    </a>
+
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="listings.html">Listings</a>
+      <a href="reservations.html">Reservations</a>
+    </nav>
+  </header>
+
+  <main class="profile-main">
+    <a href="index.html" class="back-link">← Back to Home</a>
+
+    <div class="profile-heading">
+      <span class="eyebrow">✳ YOUR CAMPUS IDENTITY</span>
+      <h1>My <em>Profile.</em></h1>
+      <p>Manage your student information and campus details.</p>
+    </div>
+
+    <section class="profile-card">
+      <div class="profile-top">
+        <div class="profile-avatar">👤</div>
+        <div>
+          <h2 id="profileGreeting">UTM Student</h2>
+          <p id="profileStatus">Checking account...</p>
+        </div>
+      </div>
+
+      <form id="profileForm">
+        <div class="form-field">
+          <label for="profileName">Display Name</label>
+          <input id="profileName" type="text"
+                 maxlength="60"
+                 placeholder="Your preferred name" required>
+        </div>
+
+        <div class="form-field">
+          <label for="profileEmail">UTM Student Email</label>
+          <input id="profileEmail" type="email" readonly>
+          <small>Your registered email cannot be changed here.</small>
+        </div>
+
+<div class="form-field">
+  <label for="profilePhone">Phone Number</label>
+
+  <div class="phone-input-group">
+    <span class="phone-prefix">🇲🇾 +60</span>
+
+    <input
+      id="profilePhone"
+      type="tel"
+      inputmode="numeric"
+      autocomplete="tel-national"
+      maxlength="12"
+      placeholder="12 345 6789"
+    >
+  </div>
+
+  <small>Enter your phone number without the starting 0.</small>
+</div>
+
+
+        <div class="form-field">
+          <label for="profileCollege">Residential College</label>
+          
+<select id="profileCollege">
+  <option value="">Select your residential college</option>
+
+  <option value="Kolej Rahman Putra">
+    Kolej Rahman Putra (KRP)
+  </option>
+
+  <option value="Kolej Tun Fatimah">
+    Kolej Tun Fatimah (KTF)
+  </option>
+
+  <option value="Kolej Tun Razak">
+    Kolej Tun Razak (KTR)
+  </option>
+
+  <option value="Kolej Tun Hussein Onn">
+    Kolej Tun Hussein Onn (KTHO)
+  </option>
+
+  <option value="Kolej Tun Dr. Ismail">
+    Kolej Tun Dr. Ismail (KTDI)
+  </option>
+
+  <option value="Kolej Perdana">
+    Kolej Perdana (KP)
+  </option>
+
+  <option value="Kolej 9 dan 10">
+    Kolej 9 dan 10 (K9 & K10)
+  </option>
+
+  <option value="Kolej Datin Seri Endon">
+    Kolej Datin Seri Endon (KDSE)
+  </option>
+
+  <option value="Kolej Dato' Onn Jaafar">
+    Kolej Dato' Onn Jaafar (KDOJ)
+  </option>
+
+  <option value="Other / Off-campus">
+    Other / Off-campus
+  </option>
+</select>
+
+        </div>
+
+        <div class="form-field">
+          <label for="profileDorm">Dorm Address (Optional)</label>
+          <textarea id="profileDorm" rows="3"
+                    maxlength="200"
+                    placeholder="Block or general residential area (no room number)"></textarea>
+          <small>Keep your exact room number private.</small>
+        </div>
+
+        <div class="verification-box">
+          <span>✉ Student Email Verification</span>
+          <strong id="verificationStatus">Checking...</strong>
+        </div>
+
+        <button type="submit" id="saveProfile" class="save-button">
+          Save Profile ↗
+        </button>
+
+        <p id="profileMessage" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+
+  <script type="module" src="profile.js"></script>
+</body>
+</html>
