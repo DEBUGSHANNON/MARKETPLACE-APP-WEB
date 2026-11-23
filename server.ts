@@ -34,7 +34,8 @@ function mapGeminiError(err: unknown): { status: number; message: string } {
   if (raw.includes('GEMINI_API_KEY')) {
     return {
       status: 500,
-      message: 'AI service is not configured yet. Please check your Gemini API key in Settings > Secrets.',
+      message:
+        'AI service is not configured yet. Add GEMINI_API_KEY to your local .env file (or AI Studio Settings > Secrets) and restart the server.',
     };
   }
   if (raw.includes('403') || raw.includes('PERMISSION_DENIED') || raw.includes('API_KEY_INVALID') || raw.includes('400')) {

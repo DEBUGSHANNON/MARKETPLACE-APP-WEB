@@ -98,36 +98,45 @@ const EMULATOR_ACCOUNTS: Record<
 async function verifyEmulatorEmail(user: User, email: string): Promise<boolean> {
   if (user.emailVerified) return false;
   await sendEmailVerification(user);
-  const res = await fetch(
-    `http://127.0.0.1:9099/emulator/v1/projects/${firebaseConfig.projectId}/oobCodes`,
+
+  const candidateProjects = Array.from(
+    new Set([firebaseConfig.projectId, 'gen-lang-client-0143853357', 'demo-project']),
   );
-  if (!res.ok) {
-    throw new Error(
-      'Could not reach Firebase Auth Emulator on port 9099. Run "firebase emulators:start" first.',
+
+  for (const projectId of candidateProjects) {
+    const res = await fetch(
+      `http://127.0.0.1:9099/emulator/v1/projects/${projectId}/oobCodes`,
     );
+    if (!res.ok) continue;
+
+    const data = (await res.json()) as {
+      oobCodes?: Array<{
+        email?: string;
+        requestType?: string;
+        oobCode?: string;
+      }>;
+    };
+    const match = (data.oobCodes || [])
+      .reverse()
+      .find(
+        (entry) =>
+          entry.email?.toLowerCase() === email.toLowerCase() &&
+          entry.requestType === 'VERIFY_EMAIL' &&
+          entry.oobCode,
+      );
+    if (match?.oobCode) {
+      await applyActionCode(auth, match.oobCode);
+      await user.reload();
+      await user.getIdToken(true);
+      if (user.emailVerified) {
+        return true;
+      }
+    }
   }
-  const data = (await res.json()) as {
-    oobCodes?: Array<{
-      email?: string;
-      requestType?: string;
-      oobCode?: string;
-    }>;
-  };
-  const match = (data.oobCodes || [])
-    .reverse()
-    .find(
-      (entry) =>
-        entry.email?.toLowerCase() === email.toLowerCase() &&
-        entry.requestType === 'VERIFY_EMAIL' &&
-        entry.oobCode,
-    );
-  if (match?.oobCode) {
-    await applyActionCode(auth, match.oobCode);
-    await user.reload();
-    await user.getIdToken(true);
-    return true;
-  }
-  return false;
+
+  throw new Error(
+    `Could not auto-verify ${email} in the Auth Emulator. Make sure "firebase emulators:start --project ${firebaseConfig.projectId}" is running, or clear Auth Emulator data and retry.`,
+  );
 }
 
 export async function switchEmulatorRole(role: 'seller' | 'buyer'): Promise<User> {
