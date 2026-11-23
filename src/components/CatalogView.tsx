@@ -9,9 +9,14 @@ import {
 } from '../types/marketplace';
 import { formatMYR, resolveAssetUrl } from '../data/utmCatalog';
 import { AiConciergeResult, requestAiCampusConcierge } from '../lib/aiClient';
+import { ListingGridSkeleton, SyncErrorCard } from './NetworkStateViews';
 
 interface CatalogViewProps {
   listings: Listing[];
+  loading?: boolean;
+  slowLatency?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
   wishlistIds: Set<string>;
   onToggleWishlist: (listing: Listing) => Promise<void>;
   onSelectListing: (listing: Listing) => void;
@@ -37,6 +42,10 @@ const AI_QUICK_QUERIES = [
 
 export const CatalogView: React.FC<CatalogViewProps> = ({
   listings,
+  loading = false,
+  slowLatency = false,
+  error = null,
+  onRetry,
   wishlistIds,
   onToggleWishlist,
   onSelectListing,
@@ -172,9 +181,18 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         </form>
 
         {aiError && (
-          <p className="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
-            {aiError}
-          </p>
+          <div className="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5 flex flex-wrap items-center justify-between gap-2">
+            <span>{aiError}</span>
+            {aiQuery.trim() && (
+              <button
+                type="button"
+                onClick={() => void handleAskAi()}
+                className="px-2.5 py-1 rounded-lg bg-red-700 text-white text-[11px] font-semibold hover:bg-red-800 cursor-pointer"
+              >
+                Retry AI Search
+              </button>
+            )}
+          </div>
         )}
 
         {aiResult && (
@@ -259,8 +277,21 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         </select>
       </div>
 
+      {error && onRetry && (
+        <div className="mb-6">
+          <SyncErrorCard
+            compact
+            title="Live database sync interrupted"
+            message={`${error} Showing available campus catalog below.`}
+            onRetry={onRetry}
+          />
+        </div>
+      )}
+
       {/* Product Grid */}
-      {filtered.length === 0 ? (
+      {loading && listings.length === 0 ? (
+        <ListingGridSkeleton slowLatency={slowLatency} />
+      ) : filtered.length === 0 ? (
         <div className="glass-surface border border-[#0A462C]/12 rounded-2xl p-12 text-center">
           <p className="text-base font-bold text-[#112419]">
             No matching objects found

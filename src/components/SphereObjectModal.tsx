@@ -385,9 +385,16 @@ export const SphereObjectModal: React.FC<SphereObjectModalProps> = ({
                   </button>
 
                   {aiError && (
-                    <p className="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1.5">
-                      {aiError}
-                    </p>
+                    <div className="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1.5 flex items-center justify-between gap-2">
+                      <span>{aiError}</span>
+                      <button
+                        type="button"
+                        onClick={() => void handleLoadInsights()}
+                        className="font-semibold underline shrink-0 cursor-pointer"
+                      >
+                        Retry
+                      </button>
+                    </div>
                   )}
 
                   {aiInsights && (

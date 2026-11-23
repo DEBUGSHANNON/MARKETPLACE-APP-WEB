@@ -1,11 +1,22 @@
 import React, { useState } from 'react';
 import { User } from 'firebase/auth';
-import { Calendar, CheckCircle2, MapPin, MessageSquare } from 'lucide-react';
+import { Calendar, CheckCircle2, Loader2, MapPin, MessageSquare } from 'lucide-react';
 import { Reservation } from '../types/marketplace';
 import { formatMYR, resolveAssetUrl } from '../data/utmCatalog';
+import {
+  AuthLoadingSkeleton,
+  ListRowsSkeleton,
+  SyncErrorCard,
+} from './NetworkStateViews';
 
 interface ReservationsViewProps {
   user: User | null;
+  authLoading?: boolean;
+  signingIn?: boolean;
+  loading?: boolean;
+  slowLatency?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
   reservations: Reservation[];
   onSignIn: () => void;
   onOpenHandover: (reservation: Reservation, mode: 'seller' | 'buyer') => void;
@@ -23,6 +34,12 @@ const STATUS_LABELS: Record<Reservation['status'], string> = {
 
 export const ReservationsView: React.FC<ReservationsViewProps> = ({
   user,
+  authLoading = false,
+  signingIn = false,
+  loading = false,
+  slowLatency = false,
+  error = null,
+  onRetry,
   reservations,
   onSignIn,
   onOpenHandover,
@@ -32,6 +49,11 @@ export const ReservationsView: React.FC<ReservationsViewProps> = ({
 }) => {
   const [tab, setTab] = useState<'purchases' | 'sales'>('purchases');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  if (authLoading) {
+    return <AuthLoadingSkeleton label="Loading your reservations..." />;
+  }
 
   if (!user) {
     return (
@@ -49,10 +71,16 @@ export const ReservationsView: React.FC<ReservationsViewProps> = ({
           </p>
           <button
             type="button"
+            disabled={signingIn}
             onClick={onSignIn}
-            className="px-5 py-3 rounded-xl bg-[#0A462C] text-white text-sm font-semibold hover:bg-[#0E5D3B] cursor-pointer"
+            className="px-5 py-3 rounded-xl bg-[#0A462C] text-white text-sm font-semibold hover:bg-[#0E5D3B] disabled:opacity-65 inline-flex items-center gap-2 cursor-pointer"
           >
-            Sign In with UTM Google (@graduate.utm.my)
+            {signingIn && <Loader2 className="w-4 h-4 animate-spin" />}
+            <span>
+              {signingIn
+                ? 'Signing in...'
+                : 'Sign In with UTM Google (@graduate.utm.my)'}
+            </span>
           </button>
         </div>
       </div>
@@ -103,7 +131,26 @@ export const ReservationsView: React.FC<ReservationsViewProps> = ({
         </button>
       </div>
 
-      {activeList.length === 0 ? (
+      {error && onRetry && (
+        <div className="mb-6">
+          <SyncErrorCard
+            compact={reservations.length > 0}
+            title="Could not sync reservations"
+            message={error}
+            onRetry={onRetry}
+          />
+        </div>
+      )}
+
+      {actionError && (
+        <p className="mb-5 text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          {actionError}
+        </p>
+      )}
+
+      {loading && reservations.length === 0 ? (
+        <ListRowsSkeleton slowLatency={slowLatency} />
+      ) : activeList.length === 0 ? (
         <div className="bg-white border border-black/10 rounded-2xl p-12 text-center">
           <p className="text-base font-bold text-[#112419]">
             {tab === 'purchases'
@@ -234,8 +281,15 @@ export const ReservationsView: React.FC<ReservationsViewProps> = ({
                       disabled={busyId === res.id}
                       onClick={async () => {
                         setBusyId(res.id);
+                        setActionError(null);
                         try {
                           await onConfirmHandover(res);
+                        } catch (err) {
+                          setActionError(
+                            err instanceof Error
+                              ? err.message
+                              : 'Could not confirm handover. Please try again.',
+                          );
                         } finally {
                           setBusyId(null);
                         }

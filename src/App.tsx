@@ -24,15 +24,21 @@ import {
   Compass,
   Grid,
   Heart,
+  Loader2,
   MessageSquare,
+  RefreshCw,
+  WifiOff,
 } from 'lucide-react';
 import {
   auth,
   checkEmulatorReachable,
   db,
+  getFriendlyFirebaseError,
   googleProvider,
   handleFirestoreError,
   IS_EMULATOR_MODE,
+  isNetworkOrUnavailableError,
+  isPermissionDeniedError,
   OperationType,
   switchEmulatorRole,
 } from './lib/firebase';
@@ -66,6 +72,10 @@ function MarketplaceContent() {
   const [user, setUser] = useState<User | null>(null);
   const [authRevision, setAuthRevision] = useState(0);
   const [authReady, setAuthReady] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
+  const [isOnline, setIsOnline] = useState<boolean>(
+    typeof navigator !== 'undefined' ? navigator.onLine : true,
+  );
   const [emulatorOnline, setEmulatorOnline] = useState<boolean | null>(null);
 
   const [currentView, setCurrentView] = useState<AppView>('orbit');
@@ -77,8 +87,21 @@ function MarketplaceContent() {
   } | null>(null);
 
   const [liveListings, setLiveListings] = useState<Listing[]>([]);
+  const [listingsLoading, setListingsLoading] = useState(true);
+  const [listingsSlow, setListingsSlow] = useState(false);
+  const [listingsError, setListingsError] = useState<string | null>(null);
+  const [listingsRetryTick, setListingsRetryTick] = useState(0);
+
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [reservationsLoading, setReservationsLoading] = useState(false);
+  const [reservationsSlow, setReservationsSlow] = useState(false);
+  const [reservationsError, setReservationsError] = useState<string | null>(null);
+  const [reservationsRetryTick, setReservationsRetryTick] = useState(0);
+
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [wishlistError, setWishlistError] = useState<string | null>(null);
+  const [wishlistRetryTick, setWishlistRetryTick] = useState(0);
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [createPrefill, setCreatePrefill] = useState<Listing | null>(null);
@@ -97,6 +120,27 @@ function MarketplaceContent() {
       setToastMessage((curr) => (curr === msg ? null : curr));
     }, 3400);
   };
+
+  // Monitor browser online/offline transitions cleanly
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      setListingsRetryTick((t) => t + 1);
+      setReservationsRetryTick((t) => t + 1);
+      setWishlistRetryTick((t) => t + 1);
+      showToast('Back online — syncing with UTM campus database.');
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      showToast('You are offline. Reconnect to reserve, chat, or publish.');
+    };
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Auth & ID token listener (enforces @graduate.utm.my UTM student accounts only)
   useEffect(() => {
@@ -128,19 +172,34 @@ function MarketplaceContent() {
     };
   }, []);
 
-  // Public listings listener
+  // Public listings listener with slow-latency awareness & graceful retry
   useEffect(() => {
+    setListingsLoading(true);
+    setListingsSlow(false);
+    setListingsError(null);
+
+    const slowTimer = window.setTimeout(() => {
+      setListingsSlow(true);
+    }, 3500);
+
     const q = query(collection(db, 'listings'), orderBy('createdAt', 'desc'));
     const unsub = onSnapshot(
       q,
       (snap) => {
+        window.clearTimeout(slowTimer);
         const docs = snap.docs.map((d) => ({
           id: d.id,
           ...(d.data() as Omit<Listing, 'id'>),
         }));
         setLiveListings(docs);
+        setListingsLoading(false);
+        setListingsSlow(false);
+        setListingsError(null);
       },
       (error) => {
+        window.clearTimeout(slowTimer);
+        setListingsLoading(false);
+        setListingsSlow(false);
         const code = (error as { code?: string })?.code || '';
         const msg = error instanceof Error ? error.message : String(error);
         if (
@@ -150,21 +209,47 @@ function MarketplaceContent() {
             msg.includes('Failed to fetch'))
         ) {
           setEmulatorOnline(false);
+          setListingsError(
+            'Cannot reach local Firebase Emulator on 127.0.0.1:8080.',
+          );
           return;
         }
-        handleFirestoreError(error, OperationType.LIST, 'listings');
+        if (isNetworkOrUnavailableError(error)) {
+          setListingsError(getFriendlyFirebaseError(error));
+          return;
+        }
+        if (isPermissionDeniedError(error)) {
+          handleFirestoreError(error, OperationType.LIST, 'listings');
+        }
+        setListingsError(getFriendlyFirebaseError(error));
       },
     );
-    return () => unsub();
-  }, []);
+    return () => {
+      window.clearTimeout(slowTimer);
+      unsub();
+    };
+  }, [listingsRetryTick]);
 
   // Authenticated user's reservations listener (buyer + seller merged)
   useEffect(() => {
     if (!authReady || !user || !user.emailVerified) {
       setReservations([]);
+      setReservationsLoading(false);
+      setReservationsSlow(false);
+      setReservationsError(null);
       return;
     }
 
+    setReservationsLoading(true);
+    setReservationsSlow(false);
+    setReservationsError(null);
+
+    const slowTimer = window.setTimeout(() => {
+      setReservationsSlow(true);
+    }, 3500);
+
+    let buyerLoaded = false;
+    let sellerLoaded = false;
     let buyerDocs: Reservation[] = [];
     let sellerDocs: Reservation[] = [];
 
@@ -172,6 +257,12 @@ function MarketplaceContent() {
       const map = new Map<string, Reservation>();
       [...buyerDocs, ...sellerDocs].forEach((r) => map.set(r.id, r));
       setReservations(Array.from(map.values()));
+      if (buyerLoaded && sellerLoaded) {
+        window.clearTimeout(slowTimer);
+        setReservationsLoading(false);
+        setReservationsSlow(false);
+        setReservationsError(null);
+      }
     };
 
     const buyerQ = query(
@@ -185,17 +276,31 @@ function MarketplaceContent() {
 
     const handleSubError = (error: unknown) => {
       if (!auth.currentUser || auth.currentUser.uid !== user.uid) return;
+      window.clearTimeout(slowTimer);
+      setReservationsLoading(false);
+      setReservationsSlow(false);
       const code = (error as { code?: string })?.code || '';
       if (IS_EMULATOR_MODE && code === 'unavailable') {
         setEmulatorOnline(false);
+        setReservationsError(
+          'Cannot reach local Firebase Emulator on 127.0.0.1:8080.',
+        );
         return;
       }
-      handleFirestoreError(error, OperationType.LIST, 'reservations');
+      if (isNetworkOrUnavailableError(error)) {
+        setReservationsError(getFriendlyFirebaseError(error));
+        return;
+      }
+      if (isPermissionDeniedError(error)) {
+        handleFirestoreError(error, OperationType.LIST, 'reservations');
+      }
+      setReservationsError(getFriendlyFirebaseError(error));
     };
 
     const unsubBuyer = onSnapshot(
       buyerQ,
       (snap) => {
+        buyerLoaded = true;
         buyerDocs = snap.docs.map((d) => ({
           id: d.id,
           ...(d.data() as Omit<Reservation, 'id'>),
@@ -208,6 +313,7 @@ function MarketplaceContent() {
     const unsubSeller = onSnapshot(
       sellerQ,
       (snap) => {
+        sellerLoaded = true;
         sellerDocs = snap.docs.map((d) => ({
           id: d.id,
           ...(d.data() as Omit<Reservation, 'id'>),
@@ -218,18 +324,23 @@ function MarketplaceContent() {
     );
 
     return () => {
+      window.clearTimeout(slowTimer);
       unsubBuyer();
       unsubSeller();
     };
-  }, [authReady, user, authRevision]);
+  }, [authReady, user, authRevision, reservationsRetryTick]);
 
   // Authenticated user's wishlist listener
   useEffect(() => {
     if (!authReady || !user || !user.emailVerified) {
       setWishlistItems([]);
+      setWishlistLoading(false);
+      setWishlistError(null);
       return;
     }
 
+    setWishlistLoading(true);
+    setWishlistError(null);
     const path = `users/${user.uid}/wishlist`;
     const q = query(collection(db, path), orderBy('createdAt', 'desc'));
     const unsub = onSnapshot(
@@ -241,20 +352,33 @@ function MarketplaceContent() {
             ...(d.data() as Omit<WishlistItem, 'id'>),
           })),
         );
+        setWishlistLoading(false);
+        setWishlistError(null);
       },
       (error) => {
         if (!auth.currentUser || auth.currentUser.uid !== user.uid) return;
+        setWishlistLoading(false);
         const code = (error as { code?: string })?.code || '';
         if (IS_EMULATOR_MODE && code === 'unavailable') {
           setEmulatorOnline(false);
+          setWishlistError(
+            'Cannot reach local Firebase Emulator on 127.0.0.1:8080.',
+          );
           return;
         }
-        handleFirestoreError(error, OperationType.LIST, path);
+        if (isNetworkOrUnavailableError(error)) {
+          setWishlistError(getFriendlyFirebaseError(error));
+          return;
+        }
+        if (isPermissionDeniedError(error)) {
+          handleFirestoreError(error, OperationType.LIST, path);
+        }
+        setWishlistError(getFriendlyFirebaseError(error));
       },
     );
 
     return () => unsub();
-  }, [authReady, user, authRevision]);
+  }, [authReady, user, authRevision, wishlistRetryTick]);
 
   const wishlistIds = useMemo(
     () => new Set(wishlistItems.map((w) => w.listingId)),
@@ -296,12 +420,23 @@ function MarketplaceContent() {
   };
 
   const handleSignIn = async () => {
+    if (signingIn) return;
+    if (!isOnline && !IS_EMULATOR_MODE) {
+      showToast('You appear to be offline. Reconnect to sign in.');
+      return;
+    }
     if (IS_EMULATOR_MODE) {
       const nextRole =
         user?.email === 'buyer.utm@graduate.utm.my' ? 'seller' : 'buyer';
-      await handleSwitchEmulator(nextRole);
+      setSigningIn(true);
+      try {
+        await handleSwitchEmulator(nextRole);
+      } finally {
+        setSigningIn(false);
+      }
       return;
     }
+    setSigningIn(true);
     try {
       const cred = await signInWithPopup(auth, googleProvider);
       if (!isUtmStudentEmail(cred.user.email)) {
@@ -313,16 +448,22 @@ function MarketplaceContent() {
       }
       showToast('Signed in to CampusTrade UTM.');
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Sign-in cancelled.';
-      if (!msg.includes('popup-closed-by-user')) {
-        showToast(msg);
+      const raw = err instanceof Error ? err.message : '';
+      if (!raw.includes('popup-closed-by-user')) {
+        showToast(getFriendlyFirebaseError(err, 'Sign-in could not be completed.'));
       }
+    } finally {
+      setSigningIn(false);
     }
   };
 
   const handleSeedListings = async () => {
     if (!user) {
       await handleSignIn();
+      return;
+    }
+    if (!isOnline && !IS_EMULATOR_MODE) {
+      showToast('You are offline. Reconnect to publish sample listings.');
       return;
     }
     const sellerName = (
@@ -354,6 +495,10 @@ function MarketplaceContent() {
       );
       showToast('Published 6 UTM listings to Firebase!');
     } catch (error) {
+      if (isNetworkOrUnavailableError(error)) {
+        showToast(getFriendlyFirebaseError(error));
+        return;
+      }
       handleFirestoreError(error, OperationType.CREATE, 'listings');
     }
   };
@@ -409,6 +554,11 @@ function MarketplaceContent() {
     imageUrl: string;
   }) => {
     if (!user) throw new Error('Please sign in first.');
+    if (!isOnline && !IS_EMULATOR_MODE) {
+      throw new Error(
+        'You appear to be offline. Reconnect before publishing your listing.',
+      );
+    }
     const sellerName =
       user.displayName?.trim() || user.email?.split('@')[0] || 'UTM Student';
 
@@ -426,6 +576,9 @@ function MarketplaceContent() {
       setSelectedListingId(ref.id);
       setCurrentView('detail');
     } catch (error) {
+      if (isNetworkOrUnavailableError(error)) {
+        throw new Error(getFriendlyFirebaseError(error));
+      }
       handleFirestoreError(error, OperationType.CREATE, 'listings');
     }
   };
@@ -433,6 +586,10 @@ function MarketplaceContent() {
   const handleToggleWishlist = async (listing: Listing) => {
     if (!user) {
       await handleSignIn();
+      return;
+    }
+    if (!isOnline && !IS_EMULATOR_MODE) {
+      showToast('You are offline. Reconnect to update your Wishlist.');
       return;
     }
     const path = `users/${user.uid}/wishlist/${listing.id}`;
@@ -455,6 +612,10 @@ function MarketplaceContent() {
         showToast('Saved to Wishlist!');
       }
     } catch (error) {
+      if (isNetworkOrUnavailableError(error)) {
+        showToast(getFriendlyFirebaseError(error));
+        return;
+      }
       handleFirestoreError(error, OperationType.WRITE, path);
     }
   };
@@ -554,10 +715,10 @@ function MarketplaceContent() {
         setChatTarget(createdReservation);
       }
     } catch (error) {
-      if (error instanceof Error && error.message.includes('Missing or insufficient permissions')) {
+      if (isPermissionDeniedError(error)) {
         handleFirestoreError(error, OperationType.WRITE, `reservations/${listing.id}`);
       }
-      showToast(error instanceof Error ? error.message : 'Could not reserve object.');
+      showToast(getFriendlyFirebaseError(error, 'Could not reserve object.'));
     }
   };
 
@@ -570,6 +731,11 @@ function MarketplaceContent() {
     lng: number;
   }) => {
     if (!handoverTarget || !user) return;
+    if (!isOnline && !IS_EMULATOR_MODE) {
+      throw new Error(
+        'You appear to be offline. Reconnect to send this handover proposal.',
+      );
+    }
     const { reservation, mode } = handoverTarget;
     const path = `reservations/${reservation.id}`;
     const ref = doc(db, 'reservations', reservation.id);
@@ -591,12 +757,20 @@ function MarketplaceContent() {
           : 'Suggested handover changes sent to seller.',
       );
     } catch (error) {
+      if (isNetworkOrUnavailableError(error)) {
+        throw new Error(getFriendlyFirebaseError(error));
+      }
       handleFirestoreError(error, OperationType.UPDATE, path);
     }
   };
 
   const handleConfirmHandover = async (reservation: Reservation) => {
     if (!user) return;
+    if (!isOnline && !IS_EMULATOR_MODE) {
+      const msg = 'You are offline. Reconnect to confirm handover.';
+      showToast(msg);
+      throw new Error(msg);
+    }
     const path = `reservations/${reservation.id}`;
     try {
       await updateDoc(doc(db, 'reservations', reservation.id), {
@@ -605,6 +779,11 @@ function MarketplaceContent() {
       });
       showToast('Campus handover confirmed!');
     } catch (error) {
+      if (isNetworkOrUnavailableError(error)) {
+        const msg = getFriendlyFirebaseError(error);
+        showToast(msg);
+        throw new Error(msg);
+      }
       handleFirestoreError(error, OperationType.UPDATE, path);
     }
   };
@@ -620,6 +799,11 @@ function MarketplaceContent() {
       campusZone: string;
     },
   ) => {
+    if (!isOnline && !IS_EMULATOR_MODE) {
+      throw new Error(
+        'You are offline. Reconnect to save changes to your listing.',
+      );
+    }
     const path = `listings/${listingId}`;
     try {
       await updateDoc(doc(db, 'listings', listingId), {
@@ -628,11 +812,18 @@ function MarketplaceContent() {
       });
       showToast('Listing updated.');
     } catch (error) {
+      if (isNetworkOrUnavailableError(error)) {
+        throw new Error(getFriendlyFirebaseError(error));
+      }
       handleFirestoreError(error, OperationType.UPDATE, path);
     }
   };
 
   const handleMarkSold = async (listing: Listing) => {
+    if (!isOnline && !IS_EMULATOR_MODE) {
+      showToast('You are offline. Reconnect to mark listing as sold.');
+      return;
+    }
     const path = `listings/${listing.id}`;
     try {
       await updateDoc(doc(db, 'listings', listing.id), {
@@ -641,16 +832,28 @@ function MarketplaceContent() {
       });
       showToast('Listing marked as sold.');
     } catch (error) {
+      if (isNetworkOrUnavailableError(error)) {
+        showToast(getFriendlyFirebaseError(error));
+        return;
+      }
       handleFirestoreError(error, OperationType.UPDATE, path);
     }
   };
 
   const handleDeleteListing = async (listing: Listing) => {
+    if (!isOnline && !IS_EMULATOR_MODE) {
+      showToast('You are offline. Reconnect to delete this listing.');
+      return;
+    }
     const path = `listings/${listing.id}`;
     try {
       await deleteDoc(doc(db, 'listings', listing.id));
       showToast('Listing deleted.');
     } catch (error) {
+      if (isNetworkOrUnavailableError(error)) {
+        showToast(getFriendlyFirebaseError(error));
+        return;
+      }
       handleFirestoreError(error, OperationType.DELETE, path);
     }
   };
@@ -674,6 +877,8 @@ function MarketplaceContent() {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         user={user}
+        authLoading={!authReady}
+        signingIn={signingIn}
         onSignIn={() => void handleSignIn()}
         onSwitchAccount={() => void handleSignIn()}
         onSignOut={() => void handleSignOut()}
@@ -682,10 +887,48 @@ function MarketplaceContent() {
         wishlistCount={wishlistItems.length}
       />
 
+      {/* Non-intrusive offline recovery banner (only renders when offline) */}
+      {!isOnline && (
+        <div
+          role="status"
+          className="fixed top-[66px] sm:top-[76px] left-1/2 -translate-x-1/2 z-30 w-[calc(100%-1.5rem)] max-w-xl bg-amber-50/95 backdrop-blur-md border border-amber-300 text-amber-950 rounded-xl px-3.5 py-2 shadow-md flex items-center justify-between gap-3 text-xs"
+        >
+          <span className="inline-flex items-center gap-2 font-semibold min-w-0">
+            <WifiOff className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+            <span className="truncate">
+              Offline mode — showing cached campus view. Reconnect to sync.
+            </span>
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              const nowOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+              setIsOnline(nowOnline);
+              if (nowOnline) {
+                setListingsRetryTick((t) => t + 1);
+                setReservationsRetryTick((t) => t + 1);
+                setWishlistRetryTick((t) => t + 1);
+                showToast('Reconnected — syncing live data.');
+              } else {
+                showToast('Still offline — check Wi-Fi or mobile data.');
+              }
+            }}
+            className="px-2.5 py-1 rounded-lg bg-amber-900 text-white font-semibold hover:bg-amber-800 inline-flex items-center gap-1 shrink-0 cursor-pointer"
+          >
+            <RefreshCw className="w-3 h-3" />
+            <span>Retry</span>
+          </button>
+        </div>
+      )}
+
       <main className={`flex-1 relative z-10 ${currentView !== 'orbit' ? 'pt-20 md:pt-20 pb-20 md:pb-0' : ''}`}>
         {currentView === 'orbit' && (
           <OrbitSphere
             listings={allListings}
+            loading={listingsLoading}
+            slowLatency={listingsSlow}
+            syncError={listingsError}
+            onRetrySync={() => setListingsRetryTick((t) => t + 1)}
             isPaused={Boolean(spherePopup)}
             onSelectListing={handleSelectSphereListing}
             onOpenCatalog={() => setCurrentView('catalog')}
@@ -696,6 +939,10 @@ function MarketplaceContent() {
         {currentView === 'catalog' && (
           <CatalogView
             listings={allListings}
+            loading={listingsLoading}
+            slowLatency={listingsSlow}
+            error={listingsError}
+            onRetry={() => setListingsRetryTick((t) => t + 1)}
             wishlistIds={wishlistIds}
             onToggleWishlist={handleToggleWishlist}
             onSelectListing={handleSelectListing}
@@ -725,9 +972,42 @@ function MarketplaceContent() {
           />
         )}
 
+        {currentView === 'detail' && !selectedListing && (
+          <div className="max-w-3xl mx-auto px-5 md:px-10 py-16 text-center">
+            {listingsLoading ? (
+              <div className="glass-surface border border-[#0A462C]/12 rounded-3xl p-10 inline-flex items-center gap-3 text-sm font-semibold text-[#0A462C]">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Loading campus object details...</span>
+              </div>
+            ) : (
+              <div className="glass-surface border border-[#0A462C]/12 rounded-3xl p-10 space-y-3">
+                <p className="text-lg font-bold text-[#112419]">
+                  Object unavailable or removed
+                </p>
+                <p className="text-sm text-[#4A5D50]">
+                  This listing may have been removed by the seller or is still syncing.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('catalog')}
+                  className="px-5 py-2.5 rounded-xl bg-[#0A462C] text-white text-sm font-semibold hover:bg-[#0E5D3B] cursor-pointer"
+                >
+                  Back to Catalog
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {currentView === 'reservations' && (
           <ReservationsView
             user={user}
+            authLoading={!authReady}
+            signingIn={signingIn}
+            loading={reservationsLoading}
+            slowLatency={reservationsSlow}
+            error={reservationsError}
+            onRetry={() => setReservationsRetryTick((t) => t + 1)}
             reservations={reservations}
             onSignIn={() => void handleSignIn()}
             onOpenHandover={(reservation, mode) =>
@@ -745,6 +1025,11 @@ function MarketplaceContent() {
         {currentView === 'wishlist' && (
           <WishlistView
             user={user}
+            authLoading={!authReady}
+            signingIn={signingIn}
+            loading={wishlistLoading}
+            error={wishlistError}
+            onRetry={() => setWishlistRetryTick((t) => t + 1)}
             wishlistItems={wishlistItems}
             allListings={allListings}
             onSignIn={() => void handleSignIn()}
@@ -758,6 +1043,11 @@ function MarketplaceContent() {
         {currentView === 'messages' && (
           <MyMessagesView
             user={user}
+            authLoading={!authReady}
+            signingIn={signingIn}
+            reservationsLoading={reservationsLoading}
+            reservationsError={reservationsError}
+            onRetryReservations={() => setReservationsRetryTick((t) => t + 1)}
             reservations={reservations}
             onSignIn={() => void handleSignIn()}
             onBrowseCatalog={() => setCurrentView('catalog')}
@@ -771,6 +1061,11 @@ function MarketplaceContent() {
         {currentView === 'my-listings' && (
           <MyListingsView
             user={user}
+            authLoading={!authReady}
+            signingIn={signingIn}
+            loading={listingsLoading}
+            error={listingsError}
+            onRetry={() => setListingsRetryTick((t) => t + 1)}
             listings={liveListings}
             reservations={reservations}
             onSignIn={() => void handleSignIn()}
@@ -790,6 +1085,8 @@ function MarketplaceContent() {
         {currentView === 'profile' && (
           <ProfileView
             user={user}
+            authLoading={!authReady}
+            signingIn={signingIn}
             onSignIn={() => void handleSignIn()}
             onToast={showToast}
           />

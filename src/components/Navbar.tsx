@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import {
   ChevronDown,
   Heart,
+  Loader2,
   LogOut,
   MessageSquare,
   Package,
@@ -18,6 +19,8 @@ interface NavbarProps {
   currentView: AppView;
   onNavigate: (view: AppView) => void;
   user: User | null;
+  authLoading?: boolean;
+  signingIn?: boolean;
   onSignIn: () => void;
   onSwitchAccount: () => void;
   onSignOut: () => void;
@@ -30,6 +33,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentView,
   onNavigate,
   user,
+  authLoading = false,
+  signingIn = false,
   onSignIn,
   onSwitchAccount,
   onSignOut,
@@ -114,14 +119,21 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Zone 3: Single primary action / User dropdown */}
       <div className="relative flex items-center shrink-0" ref={menuRef}>
-        {!user ? (
+        {authLoading ? (
+          <div
+            aria-label="Loading account"
+            className="w-24 h-9 rounded-lg bg-[#0A462C]/10 animate-pulse"
+          />
+        ) : !user ? (
           <button
             type="button"
+            disabled={signingIn}
             onClick={onSignIn}
             title="Sign in with your @graduate.utm.my UTM student Google account"
-            className="px-4 py-2 rounded-lg bg-[#0A462C] text-white text-sm font-semibold hover:bg-[#0E5D3B] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            className="px-4 py-2 rounded-lg bg-[#0A462C] text-white text-sm font-semibold hover:bg-[#0E5D3B] disabled:opacity-65 transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
           >
-            UTM Sign In
+            {signingIn && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            <span>{signingIn ? 'Signing in...' : 'UTM Sign In'}</span>
           </button>
         ) : (
           <>

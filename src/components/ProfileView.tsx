@@ -1,18 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { User, updateProfile } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { ShieldCheck } from 'lucide-react';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { Loader2, ShieldCheck } from 'lucide-react';
+import {
+  db,
+  getFriendlyFirebaseError,
+  handleFirestoreError,
+  isNetworkOrUnavailableError,
+  isPermissionDeniedError,
+  OperationType,
+} from '../lib/firebase';
 import { isUtmStudentEmail, UTM_COLLEGES } from '../data/utmCatalog';
+import { AuthLoadingSkeleton, SyncErrorCard } from './NetworkStateViews';
 
 interface ProfileViewProps {
   user: User | null;
+  authLoading?: boolean;
+  signingIn?: boolean;
   onSignIn: () => void;
   onToast: (msg: string) => void;
 }
 
 export const ProfileView: React.FC<ProfileViewProps> = ({
   user,
+  authLoading = false,
+  signingIn = false,
   onSignIn,
   onToast,
 }) => {
@@ -22,17 +34,22 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [dormAddress, setDormAddress] = useState('');
   const [hasExistingDoc, setHasExistingDoc] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [retryTick, setRetryTick] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
       setLoading(false);
+      setLoadError(null);
       return;
     }
 
     let cancelled = false;
     const loadProfile = async () => {
       setLoading(true);
+      setLoadError(null);
       const path = `users/${user.uid}`;
       try {
         const snap = await getDoc(doc(db, 'users', user.uid));
@@ -58,7 +75,18 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           setDisplayName(user.displayName || user.email?.split('@')[0] || '');
         }
       } catch (error) {
-        handleFirestoreError(error, OperationType.GET, path);
+        if (cancelled) return;
+        if (isNetworkOrUnavailableError(error)) {
+          setLoadError(getFriendlyFirebaseError(error));
+          return;
+        }
+        if (isPermissionDeniedError(error)) {
+          setLoadError('You do not have permission to access this profile.');
+          return;
+        }
+        setLoadError(
+          getFriendlyFirebaseError(error, `Could not load ${path}.`),
+        );
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -68,7 +96,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, retryTick]);
+
+  if (authLoading) {
+    return <AuthLoadingSkeleton label="Loading your student profile..." />;
+  }
 
   if (!user) {
     return (
@@ -82,10 +114,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </p>
           <button
             type="button"
+            disabled={signingIn}
             onClick={onSignIn}
-            className="px-5 py-3 rounded-xl bg-[#0A462C] text-white text-sm font-semibold cursor-pointer"
+            className="px-5 py-3 rounded-xl bg-[#0A462C] text-white text-sm font-semibold hover:bg-[#0E5D3B] disabled:opacity-65 inline-flex items-center gap-2 cursor-pointer"
           >
-            Sign In with UTM Google (@graduate.utm.my)
+            {signingIn && <Loader2 className="w-4 h-4 animate-spin" />}
+            <span>
+              {signingIn
+                ? 'Signing in...'
+                : 'Sign In with UTM Google (@graduate.utm.my)'}
+            </span>
           </button>
         </div>
       </div>
@@ -110,6 +148,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     const formattedPhone = digits ? `+60${digits}` : '';
 
     setSaving(true);
+    setSaveError(null);
     const path = `users/${user.uid}`;
     try {
       await updateProfile(user, { displayName: cleanName });
@@ -141,6 +180,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       }
       onToast('Student profile saved.');
     } catch (error) {
+      if (isNetworkOrUnavailableError(error)) {
+        setSaveError(getFriendlyFirebaseError(error));
+        return;
+      }
       handleFirestoreError(error, OperationType.WRITE, path);
     } finally {
       setSaving(false);
@@ -178,7 +221,17 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         </div>
 
         {loading ? (
-          <p className="text-sm text-[#4A5D50] py-6">Loading profile...</p>
+          <div className="py-6 space-y-3 animate-pulse">
+            <div className="h-4 w-36 rounded bg-black/8" />
+            <div className="h-10 w-full rounded-xl bg-black/6" />
+            <div className="h-10 w-full rounded-xl bg-black/6" />
+          </div>
+        ) : loadError ? (
+          <SyncErrorCard
+            title="Could not load student profile"
+            message={loadError}
+            onRetry={() => setRetryTick((t) => t + 1)}
+          />
         ) : (
           <form onSubmit={handleSave} className="space-y-5">
             <div>
@@ -247,12 +300,19 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               />
             </div>
 
+            {saveError && (
+              <p className="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3.5 py-2.5">
+                {saveError}
+              </p>
+            )}
+
             <button
               type="submit"
               disabled={saving}
-              className="px-5 py-3 rounded-xl bg-[#0A462C] text-white text-sm font-semibold hover:bg-[#0E5D3B] disabled:opacity-50 cursor-pointer"
+              className="px-5 py-3 rounded-xl bg-[#0A462C] text-white text-sm font-semibold hover:bg-[#0E5D3B] disabled:opacity-50 inline-flex items-center gap-2 cursor-pointer"
             >
-              {saving ? 'Saving...' : 'Save Profile'}
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+              <span>{saving ? 'Saving...' : 'Save Profile'}</span>
             </button>
           </form>
         )}

@@ -242,6 +242,65 @@ export function handleFirestoreError(
   throw new Error(JSON.stringify(errInfo));
 }
 
+export function isPermissionDeniedError(error: unknown): boolean {
+  const code =
+    typeof error === 'object' && error !== null && 'code' in error
+      ? String((error as { code?: unknown }).code || '').toLowerCase()
+      : '';
+  const msg = (error instanceof Error ? error.message : String(error)).toLowerCase();
+  return (
+    code.includes('permission-denied') ||
+    msg.includes('missing or insufficient permissions') ||
+    msg.includes('permission-denied')
+  );
+}
+
+export function isNetworkOrUnavailableError(error: unknown): boolean {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    return true;
+  }
+  const code =
+    typeof error === 'object' && error !== null && 'code' in error
+      ? String((error as { code?: unknown }).code || '').toLowerCase()
+      : '';
+  const msg = (error instanceof Error ? error.message : String(error)).toLowerCase();
+  return (
+    code === 'unavailable' ||
+    code === 'deadline-exceeded' ||
+    code === 'aborted' ||
+    code === 'auth/network-request-failed' ||
+    code === 'auth/timeout' ||
+    msg.includes('client is offline') ||
+    msg.includes('failed to fetch') ||
+    msg.includes('network-request-failed') ||
+    msg.includes('network error') ||
+    msg.includes('err_internet_disconnected') ||
+    msg.includes('deadline exceeded')
+  );
+}
+
+export function getFriendlyFirebaseError(
+  error: unknown,
+  fallback = 'Something went wrong while contacting the campus server. Please try again.',
+): string {
+  const msg = error instanceof Error ? error.message : String(error);
+  const lower = msg.toLowerCase();
+
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    return 'You appear to be offline. Check your internet connection and try again.';
+  }
+  if (isNetworkOrUnavailableError(error)) {
+    return 'Network connection is slow or temporarily unavailable. Please retry in a moment.';
+  }
+  if (lower.includes('quota exceeded')) {
+    return 'Daily database quota exceeded. Please try again later.';
+  }
+  if (lower.includes('popup-blocked')) {
+    return 'Sign-in pop-up was blocked by your browser. Please allow pop-ups for this site and try again.';
+  }
+  return msg || fallback;
+}
+
 export async function testConnection(): Promise<void> {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));

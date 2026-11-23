@@ -11,9 +11,17 @@ import {
 import { motion } from 'motion/react';
 import { Loader2, Send, Sparkles, X } from 'lucide-react';
 import { ChatMessage, Reservation } from '../types/marketplace';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import {
+  db,
+  getFriendlyFirebaseError,
+  handleFirestoreError,
+  isNetworkOrUnavailableError,
+  isPermissionDeniedError,
+  OperationType,
+} from '../lib/firebase';
 import { formatMYR, resolveAssetUrl } from '../data/utmCatalog';
 import { requestAiChatSuggestions } from '../lib/aiClient';
+import { SyncErrorCard } from './NetworkStateViews';
 
 interface ChatModalProps {
   reservation: Reservation | null;
@@ -57,7 +65,11 @@ export const ChatModal: React.FC<ChatModalProps> = ({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [slowLoading, setSlowLoading] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const [chatRetryTick, setChatRetryTick] = useState(0);
   const [aiReplies, setAiReplies] = useState<string[]>([]);
   const [aiSuggesting, setAiSuggesting] = useState(false);
   const [aiError, setAiError] = useState('');
@@ -68,6 +80,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({
   useEffect(() => {
     setAiReplies([]);
     setAiError('');
+    setSendError(null);
+    setChatError(null);
   }, [reservation?.id]);
 
   useEffect(() => {
@@ -83,31 +97,55 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         },
       ]);
       setLoading(false);
+      setSlowLoading(false);
+      setChatError(null);
       return;
     }
 
     setLoading(true);
+    setSlowLoading(false);
+    setChatError(null);
+
+    const slowTimer = window.setTimeout(() => {
+      setSlowLoading(true);
+    }, 3500);
+
     const path = `reservations/${reservation.id}/messages`;
     const q = query(collection(db, path), orderBy('createdAt', 'asc'));
 
     const unsub = onSnapshot(
       q,
       (snap) => {
+        window.clearTimeout(slowTimer);
         const items = snap.docs.map((d) => ({
           id: d.id,
           ...(d.data() as Omit<ChatMessage, 'id'>),
         }));
         setMessages(items);
         setLoading(false);
+        setSlowLoading(false);
+        setChatError(null);
       },
       (error) => {
+        window.clearTimeout(slowTimer);
         setLoading(false);
-        handleFirestoreError(error, OperationType.LIST, path);
+        setSlowLoading(false);
+        if (isNetworkOrUnavailableError(error)) {
+          setChatError(getFriendlyFirebaseError(error));
+          return;
+        }
+        if (isPermissionDeniedError(error)) {
+          handleFirestoreError(error, OperationType.LIST, path);
+        }
+        setChatError(getFriendlyFirebaseError(error));
       },
     );
 
-    return () => unsub();
-  }, [reservation, user, isShowcasePreview]);
+    return () => {
+      window.clearTimeout(slowTimer);
+      unsub();
+    };
+  }, [reservation, user, isShowcasePreview, chatRetryTick]);
 
   useEffect(() => {
     if (listRef.current) {
@@ -142,8 +180,14 @@ export const ChatModal: React.FC<ChatModalProps> = ({
       return;
     }
 
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setSendError('You are offline. Your message stays ready until you reconnect.');
+      return;
+    }
+
     const path = `reservations/${reservation.id}/messages`;
     setSending(true);
+    setSendError(null);
     try {
       await addDoc(collection(db, path), {
         senderId: user.uid,
@@ -153,7 +197,14 @@ export const ChatModal: React.FC<ChatModalProps> = ({
       });
       if (!customText) setText('');
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, path);
+      if (isNetworkOrUnavailableError(error)) {
+        setSendError(getFriendlyFirebaseError(error));
+        return;
+      }
+      if (isPermissionDeniedError(error)) {
+        handleFirestoreError(error, OperationType.CREATE, path);
+      }
+      setSendError(getFriendlyFirebaseError(error, 'Could not send message.'));
     } finally {
       setSending(false);
     }
@@ -240,9 +291,23 @@ export const ChatModal: React.FC<ChatModalProps> = ({
           className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#F3F3EE]/85"
         >
           {loading ? (
-            <p className="text-xs text-[#4A5D50] text-center py-8">
-              Loading conversation...
-            </p>
+            <div className="py-10 text-center space-y-2">
+              <Loader2 className="w-5 h-5 animate-spin text-[#0A462C] mx-auto" />
+              <p className="text-xs text-[#4A5D50]">
+                {slowLoading
+                  ? 'Still loading conversation over slow network...'
+                  : 'Loading conversation...'}
+              </p>
+            </div>
+          ) : chatError ? (
+            <div className="py-4">
+              <SyncErrorCard
+                compact
+                title="Could not load messages"
+                message={chatError}
+                onRetry={() => setChatRetryTick((t) => t + 1)}
+              />
+            </div>
           ) : messages.length === 0 ? (
             <div className="text-center py-10 space-y-1.5">
               <p className="text-sm font-semibold text-[#112419]">
@@ -283,8 +348,20 @@ export const ChatModal: React.FC<ChatModalProps> = ({
 
         <div className="px-3.5 pt-2.5 pb-1.5 bg-white border-t border-black/10 space-y-1.5">
           {aiError && (
-            <p className="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1">
-              {aiError}
+            <div className="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1.5 flex items-center justify-between gap-2">
+              <span>{aiError}</span>
+              <button
+                type="button"
+                onClick={() => void handleSuggestReplies()}
+                className="font-semibold underline shrink-0 cursor-pointer"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          {sendError && (
+            <p className="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1.5">
+              {sendError}
             </p>
           )}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
@@ -349,8 +426,12 @@ export const ChatModal: React.FC<ChatModalProps> = ({
             aria-label="Send message"
             className="px-4 py-2.5 rounded-xl bg-[#0A462C] text-white text-sm font-semibold hover:bg-[#0E5D3B] disabled:opacity-45 inline-flex items-center gap-1.5 cursor-pointer"
           >
-            <Send className="w-4 h-4" />
-            <span>Send</span>
+            {sending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+            <span>{sending ? 'Sending...' : 'Send'}</span>
           </button>
         </form>
       </motion.div>

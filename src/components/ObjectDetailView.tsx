@@ -339,9 +339,16 @@ export const ObjectDetailView: React.FC<ObjectDetailViewProps> = ({
             </button>
 
             {aiError && (
-              <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
-                {aiError}
-              </p>
+              <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2 flex items-center justify-between gap-2">
+                <span>{aiError}</span>
+                <button
+                  type="button"
+                  onClick={() => void handleLoadInsights()}
+                  className="font-semibold underline shrink-0 cursor-pointer"
+                >
+                  Retry
+                </button>
+              </div>
             )}
 
             {aiInsights && (

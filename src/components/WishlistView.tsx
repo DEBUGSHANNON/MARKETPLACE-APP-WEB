@@ -1,12 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { User } from 'firebase/auth';
 import { motion } from 'motion/react';
-import { ArrowUpRight, Compass, Heart } from 'lucide-react';
+import { ArrowUpRight, Compass, Heart, Loader2 } from 'lucide-react';
 import { Listing, WishlistItem } from '../types/marketplace';
 import { formatMYR, resolveAssetUrl } from '../data/utmCatalog';
+import {
+  AuthLoadingSkeleton,
+  ListingGridSkeleton,
+  SyncErrorCard,
+} from './NetworkStateViews';
 
 interface WishlistViewProps {
   user: User | null;
+  authLoading?: boolean;
+  signingIn?: boolean;
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
   wishlistItems: WishlistItem[];
   allListings: Listing[];
   onSignIn: () => void;
@@ -18,6 +28,11 @@ interface WishlistViewProps {
 
 export const WishlistView: React.FC<WishlistViewProps> = ({
   user,
+  authLoading = false,
+  signingIn = false,
+  loading = false,
+  error = null,
+  onRetry,
   wishlistItems,
   allListings,
   onSignIn,
@@ -26,6 +41,12 @@ export const WishlistView: React.FC<WishlistViewProps> = ({
   onNavigateHome,
   onBrowseCatalog,
 }) => {
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  if (authLoading) {
+    return <AuthLoadingSkeleton label="Loading your wishlist..." />;
+  }
+
   if (!user) {
     return (
       <div className="max-w-4xl mx-auto px-5 md:px-10 py-16 text-center">
@@ -45,10 +66,16 @@ export const WishlistView: React.FC<WishlistViewProps> = ({
           </p>
           <button
             type="button"
+            disabled={signingIn}
             onClick={onSignIn}
-            className="px-5 py-3 rounded-xl bg-[#0A462C] text-white text-sm font-semibold hover:bg-[#0E5D3B] transition-colors cursor-pointer"
+            className="px-5 py-3 rounded-xl bg-[#0A462C] text-white text-sm font-semibold hover:bg-[#0E5D3B] disabled:opacity-65 transition-colors inline-flex items-center gap-2 cursor-pointer"
           >
-            Sign In with UTM Google (@graduate.utm.my)
+            {signingIn && <Loader2 className="w-4 h-4 animate-spin" />}
+            <span>
+              {signingIn
+                ? 'Signing in...'
+                : 'Sign In with UTM Google (@graduate.utm.my)'}
+            </span>
           </button>
         </div>
       </div>
@@ -113,7 +140,20 @@ export const WishlistView: React.FC<WishlistViewProps> = ({
         </div>
       </div>
 
-      {wishlistItems.length === 0 ? (
+      {error && onRetry && (
+        <div className="mb-6">
+          <SyncErrorCard
+            compact={wishlistItems.length > 0}
+            title="Could not sync wishlist"
+            message={error}
+            onRetry={onRetry}
+          />
+        </div>
+      )}
+
+      {loading && wishlistItems.length === 0 ? (
+        <ListingGridSkeleton count={3} />
+      ) : wishlistItems.length === 0 ? (
         <div className="glass-surface border border-[#0A462C]/12 rounded-3xl p-12 text-center shadow-sm">
           <div className="w-12 h-12 rounded-2xl bg-[#DCE8D5] text-[#0A462C] flex items-center justify-center mx-auto mb-4">
             <Heart className="w-5 h-5" />
@@ -147,11 +187,23 @@ export const WishlistView: React.FC<WishlistViewProps> = ({
               >
                 <button
                   type="button"
-                  onClick={() => void onToggleWishlist(listing)}
+                  disabled={togglingId === listing.id}
+                  onClick={async () => {
+                    setTogglingId(listing.id);
+                    try {
+                      await onToggleWishlist(listing);
+                    } finally {
+                      setTogglingId(null);
+                    }
+                  }}
                   aria-label={`Remove ${listing.title} from wishlist`}
-                  className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-md border border-black/10 text-[#0A462C] flex items-center justify-center shadow-sm hover:scale-110 transition-transform cursor-pointer"
+                  className="absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md border border-black/10 text-[#0A462C] flex items-center justify-center shadow-sm hover:scale-110 disabled:opacity-60 transition-transform cursor-pointer"
                 >
-                  <Heart className="w-4 h-4 fill-[#0A462C] text-[#0A462C]" />
+                  {togglingId === listing.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-[#0A462C]" />
+                  ) : (
+                    <Heart className="w-4 h-4 fill-[#0A462C] text-[#0A462C]" />
+                  )}
                 </button>
 
                 <button

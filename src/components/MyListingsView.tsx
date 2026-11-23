@@ -8,9 +8,19 @@ import {
   Reservation,
 } from '../types/marketplace';
 import { formatMYR, resolveAssetUrl, UTM_CAMPUS_ZONES } from '../data/utmCatalog';
+import {
+  AuthLoadingSkeleton,
+  ListingGridSkeleton,
+  SyncErrorCard,
+} from './NetworkStateViews';
 
 interface MyListingsViewProps {
   user: User | null;
+  authLoading?: boolean;
+  signingIn?: boolean;
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
   listings: Listing[];
   reservations: Reservation[];
   onSignIn: () => void;
@@ -35,6 +45,11 @@ interface MyListingsViewProps {
 
 export const MyListingsView: React.FC<MyListingsViewProps> = ({
   user,
+  authLoading = false,
+  signingIn = false,
+  loading = false,
+  error = null,
+  onRetry,
   listings,
   reservations,
   onSignIn,
@@ -54,7 +69,13 @@ export const MyListingsView: React.FC<MyListingsViewProps> = ({
   const [condition, setCondition] = useState<ListingCondition>('Good');
   const [campusZone, setCampusZone] = useState(UTM_CAMPUS_ZONES[0].name);
   const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState('');
   const [seeding, setSeeding] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  if (authLoading) {
+    return <AuthLoadingSkeleton label="Loading your seller studio..." />;
+  }
 
   if (!user) {
     return (
@@ -72,10 +93,16 @@ export const MyListingsView: React.FC<MyListingsViewProps> = ({
           </p>
           <button
             type="button"
+            disabled={signingIn}
             onClick={onSignIn}
-            className="px-5 py-3 rounded-xl bg-[#0A462C] text-white text-sm font-semibold hover:bg-[#0E5D3B] cursor-pointer"
+            className="px-5 py-3 rounded-xl bg-[#0A462C] text-white text-sm font-semibold hover:bg-[#0E5D3B] disabled:opacity-65 inline-flex items-center gap-2 cursor-pointer"
           >
-            Sign In with UTM Google (@graduate.utm.my)
+            {signingIn && <Loader2 className="w-4 h-4 animate-spin" />}
+            <span>
+              {signingIn
+                ? 'Signing in...'
+                : 'Sign In with UTM Google (@graduate.utm.my)'}
+            </span>
           </button>
         </div>
       </div>
@@ -88,6 +115,7 @@ export const MyListingsView: React.FC<MyListingsViewProps> = ({
 
   const openEdit = (item: Listing) => {
     setEditing(item);
+    setEditError('');
     setTitle(item.title);
     setDescription(item.description);
     setPrice(String(item.price));
@@ -101,9 +129,11 @@ export const MyListingsView: React.FC<MyListingsViewProps> = ({
     if (!editing) return;
     const numericPrice = Number(price);
     if (!title.trim() || !description.trim() || !Number.isFinite(numericPrice) || numericPrice < 0) {
+      setEditError('Please provide a valid title, description, and RM price.');
       return;
     }
     setSaving(true);
+    setEditError('');
     try {
       await onUpdateListing(editing.id, {
         title: title.trim().slice(0, 100),
@@ -114,6 +144,10 @@ export const MyListingsView: React.FC<MyListingsViewProps> = ({
         campusZone,
       });
       setEditing(null);
+    } catch (err) {
+      setEditError(
+        err instanceof Error ? err.message : 'Could not save changes. Please retry.',
+      );
     } finally {
       setSaving(false);
     }
@@ -148,7 +182,20 @@ export const MyListingsView: React.FC<MyListingsViewProps> = ({
         </button>
       </div>
 
-      {myItems.length === 0 ? (
+      {error && onRetry && (
+        <div className="mb-6">
+          <SyncErrorCard
+            compact={myItems.length > 0}
+            title="Could not sync your listings"
+            message={error}
+            onRetry={onRetry}
+          />
+        </div>
+      )}
+
+      {loading && myItems.length === 0 ? (
+        <ListingGridSkeleton count={3} />
+      ) : myItems.length === 0 ? (
         <div className="glass-surface border border-[#0A462C]/12 rounded-3xl p-12 text-center shadow-sm">
           <p className="text-base font-bold text-[#112419]">
             You haven&apos;t published any listings yet
@@ -261,22 +308,46 @@ export const MyListingsView: React.FC<MyListingsViewProps> = ({
                   {item.status === 'reserved' && (
                     <button
                       type="button"
-                      onClick={() => void onMarkSold(item)}
-                      className="flex-1 py-2 px-3 rounded-lg bg-[#0A462C] text-white text-xs font-semibold hover:bg-[#0E5D3B] inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                      disabled={busyId === item.id}
+                      onClick={async () => {
+                        setBusyId(item.id);
+                        try {
+                          await onMarkSold(item);
+                        } finally {
+                          setBusyId(null);
+                        }
+                      }}
+                      className="flex-1 py-2 px-3 rounded-lg bg-[#0A462C] text-white text-xs font-semibold hover:bg-[#0E5D3B] disabled:opacity-55 inline-flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Mark Sold</span>
+                      {busyId === item.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Check className="w-3.5 h-3.5" />
+                      )}
+                      <span>{busyId === item.id ? 'Updating...' : 'Mark Sold'}</span>
                     </button>
                   )}
 
                   {item.status === 'available' && (
                     <button
                       type="button"
-                      onClick={() => void onDeleteListing(item)}
+                      disabled={busyId === item.id}
+                      onClick={async () => {
+                        setBusyId(item.id);
+                        try {
+                          await onDeleteListing(item);
+                        } finally {
+                          setBusyId(null);
+                        }
+                      }}
                       aria-label={`Delete ${item.title}`}
-                      className="py-2 px-3 rounded-lg border border-red-200 text-xs font-semibold text-red-700 hover:bg-red-50 inline-flex items-center justify-center gap-1 cursor-pointer"
+                      className="py-2 px-3 rounded-lg border border-red-200 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-55 inline-flex items-center justify-center gap-1 cursor-pointer"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      {busyId === item.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5" />
+                      )}
                     </button>
                   )}
                 </div>
@@ -414,6 +485,12 @@ export const MyListingsView: React.FC<MyListingsViewProps> = ({
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-sm"
                 />
               </div>
+
+              {editError && (
+                <p className="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                  {editError}
+                </p>
+              )}
 
               <div className="flex justify-end gap-3 pt-2">
                 <button

@@ -33,13 +33,39 @@ export interface AiListingInsights {
 }
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+const AI_REQUEST_TIMEOUT_MS = 18000;
 
 async function postAiJson<T>(url: string, body: unknown): Promise<T> {
-  const res = await fetch(`${API_BASE}${url}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    throw new Error(
+      'You are currently offline. Reconnect to use UTM AI tools.',
+    );
+  }
+
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${url}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error(
+        'The AI assistant took too long to respond on this connection. Please try again.',
+      );
+    }
+    throw new Error(
+      'Network connection interrupted while contacting UTM AI. Check your signal and retry.',
+    );
+  } finally {
+    window.clearTimeout(timer);
+  }
+
   const contentType = res.headers.get('content-type') || '';
   const data = contentType.includes('application/json')
     ? await res.json().catch(() => ({}))
