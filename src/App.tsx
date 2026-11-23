@@ -218,10 +218,10 @@ function MarketplaceContent() {
           setListingsError(getFriendlyFirebaseError(error));
           return;
         }
+        setListingsError(getFriendlyFirebaseError(error));
         if (isPermissionDeniedError(error)) {
           handleFirestoreError(error, OperationType.LIST, 'listings');
         }
-        setListingsError(getFriendlyFirebaseError(error));
       },
     );
     return () => {
@@ -291,10 +291,10 @@ function MarketplaceContent() {
         setReservationsError(getFriendlyFirebaseError(error));
         return;
       }
+      setReservationsError(getFriendlyFirebaseError(error));
       if (isPermissionDeniedError(error)) {
         handleFirestoreError(error, OperationType.LIST, 'reservations');
       }
-      setReservationsError(getFriendlyFirebaseError(error));
     };
 
     const unsubBuyer = onSnapshot(
@@ -370,10 +370,10 @@ function MarketplaceContent() {
           setWishlistError(getFriendlyFirebaseError(error));
           return;
         }
+        setWishlistError(getFriendlyFirebaseError(error));
         if (isPermissionDeniedError(error)) {
           handleFirestoreError(error, OperationType.LIST, path);
         }
-        setWishlistError(getFriendlyFirebaseError(error));
       },
     );
 

@@ -153,10 +153,10 @@ export const MyMessagesView: React.FC<MyMessagesViewProps> = ({
           setChatError(getFriendlyFirebaseError(error));
           return;
         }
+        setChatError(getFriendlyFirebaseError(error));
         if (isPermissionDeniedError(error)) {
           handleFirestoreError(error, OperationType.LIST, path);
         }
-        setChatError(getFriendlyFirebaseError(error));
       },
     );
 

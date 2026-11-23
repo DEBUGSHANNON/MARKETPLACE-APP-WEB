@@ -134,10 +134,10 @@ export const ChatModal: React.FC<ChatModalProps> = ({
           setChatError(getFriendlyFirebaseError(error));
           return;
         }
+        setChatError(getFriendlyFirebaseError(error));
         if (isPermissionDeniedError(error)) {
           handleFirestoreError(error, OperationType.LIST, path);
         }
-        setChatError(getFriendlyFirebaseError(error));
       },
     );
 

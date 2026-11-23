@@ -1,12 +1,12 @@
 {
-  "projectId": "gen-lang-client-0143853357",
-  "appId": "1:611322749628:web:593929573accf523d7e6b9",
-  "apiKey": "AIzaSyAa6INtYlWcoUMjKZKEGL9drESDz3Y1m4o",
-  "authDomain": "gen-lang-client-0143853357.firebaseapp.com",
+  "projectId": "campustrade-utm-web",
+  "appId": "1:662188486452:web:ef1e2309dda117821fff61",
+  "apiKey": "AIzaSyD5YIfS3Ne3NJLS7bkHyUcR7F5k9I-hITs",
+  "authDomain": "campustrade-utm-web.firebaseapp.com",
   "firestoreDatabaseId": "ai-studio-ecb9b6c0-4a07-451f-90ec-2ec7aacf2f3b",
-  "storageBucket": "gen-lang-client-0143853357.firebasestorage.app",
-  "messagingSenderId": "611322749628",
+  "storageBucket": "campustrade-utm-web.firebasestorage.app",
+  "messagingSenderId": "662188486452",
   "measurementId": "",
-  "oAuthClientId": "611322749628-rnjoqcbhie3m94ds75k1ge8koa12fu75.apps.googleusercontent.com",
+  "oAuthClientId": "662188486452-75fsk3gva9b4mp972hihdpkppt2ro6ch.apps.googleusercontent.com",
   "recaptchaSiteKey": ""
 }
