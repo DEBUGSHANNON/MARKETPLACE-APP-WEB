@@ -12,8 +12,8 @@ const PORT =
   process.env.NODE_ENV === 'production'
     ? Number(process.env.PORT) || 3000
     : 3000;
-const MODEL = 'gemini-4-hydrogen';
-const FALLBACK_MODEL = 'gemini-3.1-flash-lite';
+const MODEL = 'gemini-3.1-flash-lite';
+const FALLBACK_MODEL = 'gemini-4-hydrogen';
 
 function getAiClient(): GoogleGenAI {
   const apiKey = process.env.GEMINI_API_KEY;
