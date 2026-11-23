@@ -13,6 +13,7 @@ const PORT =
     ? Number(process.env.PORT) || 3000
     : 3000;
 const MODEL = 'gemini-4-hydrogen';
+const FALLBACK_MODEL = 'gemini-3.1-flash-lite';
 
 function getAiClient(): GoogleGenAI {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -27,6 +28,47 @@ function getAiClient(): GoogleGenAI {
       },
     },
   });
+}
+
+function isTransientAiError(err: unknown): boolean {
+  const raw = err instanceof Error ? err.message : String(err);
+  return (
+    raw.includes('503') ||
+    raw.includes('UNAVAILABLE') ||
+    raw.includes('high demand') ||
+    raw.includes('ECONNRESET') ||
+    raw.includes('ETIMEDOUT')
+  );
+}
+
+async function generateWithRetry(
+  ai: GoogleGenAI,
+  params: Omit<Parameters<GoogleGenAI['models']['generateContent']>[0], 'model'>,
+) {
+  const attempts: Array<{ model: string; delayMs: number }> = [
+    { model: MODEL, delayMs: 0 },
+    { model: MODEL, delayMs: 500 },
+    { model: FALLBACK_MODEL, delayMs: 900 },
+  ];
+
+  let lastError: unknown;
+  for (const attempt of attempts) {
+    if (attempt.delayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, attempt.delayMs));
+    }
+    try {
+      return await ai.models.generateContent({
+        ...params,
+        model: attempt.model,
+      });
+    } catch (err) {
+      lastError = err;
+      if (!isTransientAiError(err)) {
+        throw err;
+      }
+    }
+  }
+  throw lastError;
 }
 
 function mapGeminiError(err: unknown): { status: number; message: string } {
@@ -48,6 +90,12 @@ function mapGeminiError(err: unknown): { status: number; message: string } {
     return {
       status: 429,
       message: 'AI rate limit reached. Please wait a moment and try again.',
+    };
+  }
+  if (isTransientAiError(err)) {
+    return {
+      status: 503,
+      message: 'CampusTrade AI is experiencing temporary high demand. Please retry in a few seconds.',
     };
   }
   return {
@@ -146,8 +194,7 @@ Allowed conditions: ${CONDITIONS.join(', ')}.
 Allowed UTM pickup zones: ${UTM_ZONES.join(', ')}.`,
       });
 
-      const response = await ai.models.generateContent({
-        model: MODEL,
+      const response = await generateWithRetry(ai, {
         contents: { parts },
         config: {
           systemInstruction:
@@ -223,8 +270,7 @@ Allowed UTM pickup zones: ${UTM_ZONES.join(', ')}.`,
       }));
 
       const ai = getAiClient();
-      const response = await ai.models.generateContent({
-        model: MODEL,
+      const response = await generateWithRetry(ai, {
         contents: `Student request: "${cleanQuery}"
 
 Available CampusTrade UTM catalog:
@@ -284,8 +330,7 @@ ${JSON.stringify(catalogSummary)}`,
       }
 
       const ai = getAiClient();
-      const response = await ai.models.generateContent({
-        model: MODEL,
+      const response = await generateWithRetry(ai, {
         contents: `Evaluate this UTM Skudai student listing:
 Title: ${listing.title}
 Price: RM ${listing.price}
@@ -338,8 +383,7 @@ Description: ${listing.description}`,
           ? recentMessages.map((m) => `${m.sender}: ${m.text}`).join('\n')
           : 'No messages sent yet.';
 
-      const response = await ai.models.generateContent({
-        model: MODEL,
+      const response = await generateWithRetry(ai, {
         contents: `Role of user needing reply suggestions: ${role === 'seller' ? 'Seller' : 'Buyer'}
 Item: ${listingTitle || 'Campus Item'} (RM ${listingPrice ?? 0})
 Preferred UTM location: ${handoverLocation || 'PSZ Library or Arked Meranti'}
