@@ -1,0 +1,79 @@
+﻿Marketplace and Trade Platform
+TEAM : The Weaknd
+MEMBER : LAM WAI SHAN
+1.0 PROJECT OVERVIEW
+This section should give a reader enough context to understand what the application is, who it is for, and why it exists, before they dive into the details.
+1.1 Description
+<Summarize the application in 3 to 5 sentences: what it is, what problem it solves, and what it lets users do. Keep it brief, details come in later sections>
+
+
+1.2 Users
+<List the types of users who will use the system and what each one mainly does with it>
+2.0 FEATURES
+This section should list what the system is expected to do. 
+2.1 Feature List
+<List each feature as one row. Describe what the feature does from the user’s point of view, state who uses it, and mark whether it is priority. Add rows as needed and keep IDs sequential>
+
+
+ID
+	Feature
+	Description
+	User Type
+	Priority
+	F-01
+	<Feature name>
+	<One or two sentences on what it does>
+	<Who uses it>
+	<Must have / Nice to have>
+	F-02
+	
+
+	
+
+	
+
+	
+
+	*Priority: Must have features required for the application to work and achieve its primary goal.. Nice to have additional features that improve the user experience or add convenience.
+3.0 DATA DESIGN
+This section should describe the information the system needs to store and how the pieces of information relate to each other.
+3.1 Entities
+<List each entity (a “thing” the system stores, such as User or Booking). For each one, describe what it represents and list its main attributes (the details stored about it)
+Entity
+	Description
+	Attributes
+	<Entity name>
+	<What it represents>
+	<Attribute 1, Attribute 2, Attribute 3 ..>
+	<Entity name>
+	
+
+	
+
+	
+
+3.2 Relationships
+<Describe how the entities are connected to each other. Each row should read as one sentence: name the two entities, say how many of each are involved (One or Many), and use a short verb to describe the connection>
+
+
+Entity Name
+	Multiplicity
+	Relationship
+	Multiplicity
+	Entity Name
+	<Name of the first entity>
+	<One or Many: how many of the first entity take part>
+	<A short verb describing the connection, e.g. makes, belongs to>
+	<One or Many: how many of the second entity take part>
+	<Name of the second entity>
+	Eg. User
+	Eg. One
+	Eg. makes
+	Eg. Many
+	Eg. Booking
+	
+
+4.0 TECHNOLOGY STACK
+This section should list the technologies used to build the system and what each one is used for.
+4.1 Technologies
+<List the technologies used to build the system and state what each one is used for, such as frontend, backend, database, or hosting>
