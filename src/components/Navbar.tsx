@@ -69,12 +69,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <header className="fixed top-4 left-1/2 -translate-x-1/2 z-40 w-auto max-w-[95vw] h-14 bg-white/60 hover:bg-white/80 backdrop-blur-xl border border-white/65 shadow-[0_10px_32px_rgba(10,34,20,0.08)] rounded-2xl px-4 sm:px-5 flex items-center justify-between gap-4 sm:gap-7 transition-colors">
+    <header className="fixed top-2.5 sm:top-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1.25rem)] md:w-auto max-w-[95vw] h-12 sm:h-14 bg-white/75 md:bg-white/60 hover:bg-white/85 backdrop-blur-xl border border-white/65 shadow-[0_10px_32px_rgba(10,34,20,0.08)] rounded-2xl px-3.5 sm:px-5 flex items-center justify-between gap-3 sm:gap-7 transition-colors">
       {/* Zone 1: Brand wordmark */}
       <button
         type="button"
         onClick={() => onNavigate('orbit')}
-        className="text-base sm:text-lg font-extrabold tracking-tight text-[#0A462C] whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-2"
+        className="text-base sm:text-lg font-extrabold tracking-tight text-[#0A462C] whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-2 min-h-[40px]"
       >
         <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#0A462C] text-white text-xs font-bold">
           C

@@ -130,7 +130,7 @@ export const UtmHandoverModal: React.FC<UtmHandoverModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="bg-[#F3F3EE] border border-black/10 rounded-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto p-6 md:p-8 shadow-2xl"
+        className="bg-[#F3F3EE] border border-black/10 rounded-2xl w-full max-w-2xl max-h-[92dvh] overflow-y-auto p-5 sm:p-6 md:p-8 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4 mb-5">
@@ -269,12 +269,12 @@ export const UtmHandoverModal: React.FC<UtmHandoverModalProps> = ({
                 />
               </svg>
 
-              <div className="px-3 py-2 bg-white/95 border-t border-black/10 flex items-center justify-between text-[11px] text-[#4A5D50]">
-                <span className="flex items-center gap-1 font-medium text-[#112419]">
-                  <MapPin className="w-3.5 h-3.5 text-[#0A462C]" />
-                  {location}
+              <div className="px-3 py-2 bg-white/95 border-t border-black/10 flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#4A5D50]">
+                <span className="flex items-center gap-1 font-medium text-[#112419] min-w-0">
+                  <MapPin className="w-3.5 h-3.5 text-[#0A462C] shrink-0" />
+                  <span className="truncate">{location}</span>
                 </span>
-                <span className="font-mono-tabular">
+                <span className="font-mono-tabular shrink-0">
                   {lat.toFixed(4)}, {lng.toFixed(4)}
                 </span>
               </div>
@@ -291,7 +291,7 @@ export const UtmHandoverModal: React.FC<UtmHandoverModalProps> = ({
               required
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-sm text-[#112419]"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-base sm:text-sm text-[#112419]"
             />
           </div>
 
@@ -306,7 +306,7 @@ export const UtmHandoverModal: React.FC<UtmHandoverModalProps> = ({
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-sm text-[#112419]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-base sm:text-sm text-[#112419]"
               />
             </div>
 
@@ -319,7 +319,7 @@ export const UtmHandoverModal: React.FC<UtmHandoverModalProps> = ({
                   value={hour}
                   onChange={(e) => setHour(e.target.value)}
                   aria-label="Hour"
-                  className="flex-1 px-3 py-2.5 rounded-xl bg-white border border-black/10 text-sm text-[#112419]"
+                  className="flex-1 px-3 py-2.5 rounded-xl bg-white border border-black/10 text-base sm:text-sm text-[#112419]"
                 >
                   {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map(
                     (h) => (
@@ -334,7 +334,7 @@ export const UtmHandoverModal: React.FC<UtmHandoverModalProps> = ({
                   value={minute}
                   onChange={(e) => setMinute(e.target.value)}
                   aria-label="Minute"
-                  className="flex-1 px-3 py-2.5 rounded-xl bg-white border border-black/10 text-sm text-[#112419]"
+                  className="flex-1 px-3 py-2.5 rounded-xl bg-white border border-black/10 text-base sm:text-sm text-[#112419]"
                 >
                   {Array.from({ length: 12 }, (_, i) =>
                     String(i * 5).padStart(2, '0'),
@@ -358,7 +358,7 @@ export const UtmHandoverModal: React.FC<UtmHandoverModalProps> = ({
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="e.g. Waiting near PSZ main glass entrance."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-sm text-[#112419]"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-base sm:text-sm text-[#112419]"
             />
           </div>
 
@@ -368,7 +368,7 @@ export const UtmHandoverModal: React.FC<UtmHandoverModalProps> = ({
             </p>
           )}
 
-          <div className="flex items-center justify-end gap-3 pt-1">
+          <div className="flex flex-wrap items-center justify-end gap-3 pt-1">
             <button
               type="button"
               onClick={onClose}

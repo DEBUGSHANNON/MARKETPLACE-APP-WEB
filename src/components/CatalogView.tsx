@@ -155,7 +155,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             value={aiQuery}
             onChange={(e) => setAiQuery(e.target.value)}
             placeholder="Describe what you need at UTM (e.g. 'study headphones under RM 200 near Meranti')..."
-            className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-[#0A462C]/15 text-sm text-[#112419] placeholder:text-[#7A8A7F]"
+            className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-[#0A462C]/15 text-base sm:text-sm text-[#112419] placeholder:text-[#7A8A7F]"
           />
           <button
             type="submit"
@@ -209,7 +209,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               key={cat}
               type="button"
               onClick={() => setCategory(cat)}
-              className={`px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
+              className={`min-h-[40px] px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
                 active
                   ? 'bg-[#0A462C] text-white'
                   : 'bg-white border border-black/10 text-[#4A5D50] hover:text-[#112419]'
@@ -231,7 +231,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Filter by keyword, zone, or category..."
             aria-label="Search marketplace objects"
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-black/10 text-sm text-[#112419] placeholder:text-[#7A8A7F]"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-black/10 text-base sm:text-sm text-[#112419] placeholder:text-[#7A8A7F]"
           />
         </div>
 
@@ -239,7 +239,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value as 'all' | ListingType)}
           aria-label="Filter by listing type"
-          className="sm:col-span-3 px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-sm text-[#112419]"
+          className="sm:col-span-3 px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-base sm:text-sm text-[#112419]"
         >
           <option value="all">Items & Services</option>
           <option value="item">Physical Items</option>
@@ -250,7 +250,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as 'all' | ListingStatus)}
           aria-label="Filter by availability"
-          className="sm:col-span-3 px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-sm text-[#112419]"
+          className="sm:col-span-3 px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-base sm:text-sm text-[#112419]"
         >
           <option value="all">All Availability</option>
           <option value="available">Available</option>

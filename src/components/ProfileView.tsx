@@ -191,7 +191,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 required
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F3F3EE] border border-black/10 text-sm"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F3F3EE] border border-black/10 text-base sm:text-sm"
               />
             </div>
 
@@ -210,7 +210,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   value={phoneDigits}
                   onChange={(e) => setPhoneDigits(e.target.value)}
                   placeholder="12 345 6789"
-                  className="flex-1 px-3.5 py-2.5 bg-transparent text-sm"
+                  className="flex-1 px-3.5 py-2.5 bg-transparent text-base sm:text-sm"
                 />
               </div>
             </div>
@@ -222,7 +222,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <select
                 value={college}
                 onChange={(e) => setCollege(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F3F3EE] border border-black/10 text-sm"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F3F3EE] border border-black/10 text-base sm:text-sm"
               >
                 <option value="">Select your residential college</option>
                 {UTM_COLLEGES.map((col) => (
@@ -243,7 +243,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 value={dormAddress}
                 onChange={(e) => setDormAddress(e.target.value)}
                 placeholder="e.g. Near KTR Courtyard (avoid exact room numbers)"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F3F3EE] border border-black/10 text-sm"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F3F3EE] border border-black/10 text-base sm:text-sm"
               />
             </div>
 

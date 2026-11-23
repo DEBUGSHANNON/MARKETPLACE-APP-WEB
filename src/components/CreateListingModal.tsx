@@ -6,7 +6,11 @@ import {
   ListingCondition,
   ListingType,
 } from '../types/marketplace';
-import { STUDIO_PRESET_IMAGES, UTM_CAMPUS_ZONES } from '../data/utmCatalog';
+import {
+  STUDIO_PRESET_IMAGES,
+  UTM_CAMPUS_ZONES,
+  resolveAssetUrl,
+} from '../data/utmCatalog';
 import { requestAiListingDraft } from '../lib/aiClient';
 
 interface CreateListingModalProps {
@@ -185,7 +189,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="bg-[#F3F3EE] border border-black/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl"
+        className="bg-[#F3F3EE] border border-black/10 rounded-2xl w-full max-w-2xl max-h-[92dvh] overflow-y-auto p-5 sm:p-6 md:p-8 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4 mb-5">
@@ -228,7 +232,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
               placeholder="e.g. Logitech mouse used 1 sem, works great, pickup at N28"
-              className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-[#0A462C]/15 text-xs sm:text-sm text-[#112419] placeholder:text-[#7A8A7F]"
+              className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-[#0A462C]/15 text-base sm:text-sm text-[#112419] placeholder:text-[#7A8A7F]"
             />
             <input
               ref={fileInputRef}
@@ -294,7 +298,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Casio fx-570EX Scientific Calculator"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-sm text-[#112419]"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-base sm:text-sm text-[#112419]"
             />
           </div>
 
@@ -306,7 +310,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as ListingCategory)}
-                className="w-full px-3 py-2.5 rounded-xl bg-white border border-black/10 text-sm text-[#112419]"
+                className="w-full px-3 py-2.5 rounded-xl bg-white border border-black/10 text-base sm:text-sm text-[#112419]"
               >
                 <option value="Electronics">Electronics</option>
                 <option value="Books">Books</option>
@@ -325,7 +329,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
               <select
                 value={condition}
                 onChange={(e) => setCondition(e.target.value as ListingCondition)}
-                className="w-full px-3 py-2.5 rounded-xl bg-white border border-black/10 text-sm text-[#112419]"
+                className="w-full px-3 py-2.5 rounded-xl bg-white border border-black/10 text-base sm:text-sm text-[#112419]"
               >
                 <option value="New">New</option>
                 <option value="Like New">Like New</option>
@@ -347,7 +351,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                 required
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-sm font-mono-tabular text-[#112419]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-base sm:text-sm font-mono-tabular text-[#112419]"
               />
             </div>
           </div>
@@ -360,7 +364,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as ListingType)}
-                className="w-full px-3 py-2.5 rounded-xl bg-white border border-black/10 text-sm text-[#112419]"
+                className="w-full px-3 py-2.5 rounded-xl bg-white border border-black/10 text-base sm:text-sm text-[#112419]"
               >
                 <option value="item">Physical Item</option>
                 <option value="service">Student Service</option>
@@ -374,7 +378,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
               <select
                 value={campusZone}
                 onChange={(e) => setCampusZone(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-white border border-black/10 text-sm text-[#112419]"
+                className="w-full px-3 py-2.5 rounded-xl bg-white border border-black/10 text-base sm:text-sm text-[#112419]"
               >
                 {UTM_CAMPUS_ZONES.map((z) => (
                   <option key={z.id} value={z.name}>
@@ -396,7 +400,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe condition, included accessories, and preferred handover times..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-sm text-[#112419]"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-black/10 text-base sm:text-sm text-[#112419]"
             />
           </div>
 
@@ -420,7 +424,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                     }`}
                   >
                     <img
-                      src={preset.url}
+                      src={resolveAssetUrl(preset.url)}
                       alt={preset.label}
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover"
@@ -434,7 +438,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
               placeholder="https://... or /src/assets/images/..."
-              className="w-full px-3.5 py-2 rounded-xl bg-white border border-black/10 text-xs text-[#4A5D50]"
+              className="w-full px-3.5 py-2 rounded-xl bg-white border border-black/10 text-base sm:text-xs text-[#4A5D50]"
             />
           </div>
 

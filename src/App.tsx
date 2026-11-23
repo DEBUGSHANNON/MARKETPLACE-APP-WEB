@@ -20,6 +20,13 @@ import {
   where,
 } from 'firebase/firestore';
 import {
+  Calendar,
+  Compass,
+  Grid,
+  Heart,
+  MessageSquare,
+} from 'lucide-react';
+import {
   auth,
   checkEmulatorReachable,
   db,
@@ -675,25 +682,7 @@ function MarketplaceContent() {
         wishlistCount={wishlistItems.length}
       />
 
-      {/* Mobile Secondary View Switcher (floating semi-transparent strip) */}
-      <div className="md:hidden fixed top-20 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center gap-3.5 px-4 py-1.5 rounded-xl bg-white/65 backdrop-blur-xl border border-white/65 shadow-sm max-w-[94vw] overflow-x-auto">
-        {(['orbit', 'catalog', 'wishlist', 'reservations', 'messages'] as AppView[]).map(
-          (v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setCurrentView(v)}
-              className={`text-xs font-semibold capitalize whitespace-nowrap py-0.5 cursor-pointer ${
-                currentView === v ? 'text-[#0A462C] underline underline-offset-4' : 'text-[#4A5D50]'
-              }`}
-            >
-              {v === 'orbit' ? 'Home' : v === 'messages' ? 'Messages' : v}
-            </button>
-          ),
-        )}
-      </div>
-
-      <main className={`flex-1 relative z-10 ${currentView !== 'orbit' ? 'pt-28 md:pt-20' : ''}`}>
+      <main className={`flex-1 relative z-10 ${currentView !== 'orbit' ? 'pt-20 md:pt-20 pb-20 md:pb-0' : ''}`}>
         {currentView === 'orbit' && (
           <OrbitSphere
             listings={allListings}
@@ -808,9 +797,11 @@ function MarketplaceContent() {
       </main>
 
       {currentView !== 'orbit' && (
-        <footer className="relative z-10 border-t border-[#0A462C]/10 px-6 md:px-10 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#4A5D50]">
+        <footer className="relative z-10 border-t border-[#0A462C]/10 px-6 md:px-10 pt-6 pb-24 md:pb-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#4A5D50]">
           <span className="font-bold text-[#0A462C]">CampusTrade UTM</span>
-          <span>Student-to-student exchange at Universiti Teknologi Malaysia, Skudai.</span>
+          <span className="text-center sm:text-right">
+            Student-to-student exchange at Universiti Teknologi Malaysia, Skudai.
+          </span>
         </footer>
       )}
 
@@ -865,9 +856,62 @@ function MarketplaceContent() {
         }}
       />
 
+      {/* Mobile Fixed Bottom Navigation Bar */}
+      <nav
+        aria-label="Mobile navigation"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-white/92 backdrop-blur-xl border-t border-[#0A462C]/12 px-1 grid grid-cols-5 items-center"
+      >
+        {(
+          [
+            { id: 'orbit', label: 'Home', Icon: Compass },
+            { id: 'catalog', label: 'Catalog', Icon: Grid },
+            { id: 'wishlist', label: 'Saved', Icon: Heart, count: wishlistItems.length },
+            { id: 'reservations', label: 'Orders', Icon: Calendar, count: reservations.length },
+            { id: 'messages', label: 'Chats', Icon: MessageSquare },
+          ] as Array<{
+            id: AppView;
+            label: string;
+            Icon: React.ComponentType<{ className?: string }>;
+            count?: number;
+          }>
+        ).map(({ id, label, Icon, count }) => {
+          const active =
+            currentView === id || (currentView === 'detail' && id === 'catalog');
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => {
+                setCurrentView(id);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`min-h-[44px] flex flex-col items-center justify-center gap-0.5 rounded-xl transition-colors cursor-pointer ${
+                active ? 'text-[#0A462C]' : 'text-[#4A5D50]'
+              }`}
+            >
+              <span className="relative inline-flex items-center justify-center">
+                <Icon className="w-[19px] h-[19px]" />
+                {typeof count === 'number' && count > 0 && (
+                  <span className="ml-0.5 font-mono-tabular text-[10px] font-bold text-[#0A462C]">
+                    {count}
+                  </span>
+                )}
+              </span>
+              <span
+                className={`text-[10px] tracking-tight whitespace-nowrap ${
+                  active ? 'font-bold text-[#0A462C]' : 'font-medium'
+                }`}
+              >
+                {label}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+
       {/* Local Firebase Emulator Role Switcher (visible only when connected to local Emulator Suite) */}
       {IS_EMULATOR_MODE && (
-        <div className="fixed bottom-5 left-5 z-40 glass-surface border border-[#0A462C]/25 rounded-2xl px-3.5 py-2.5 shadow-lg flex flex-wrap items-center gap-2 text-xs max-w-[92vw]">
+        <div className="fixed bottom-20 md:bottom-5 left-3 md:left-5 z-40 glass-surface border border-[#0A462C]/25 rounded-2xl px-3.5 py-2.5 shadow-lg flex flex-wrap items-center gap-2 text-xs max-w-[92vw]">
           <span className="font-bold text-[#0A462C] pr-1">
             {emulatorOnline === false ? 'Emulator Offline:' : 'Emulator:'}
           </span>
@@ -944,7 +988,7 @@ function MarketplaceContent() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-6 right-6 z-50 bg-[#0A462C] text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg max-w-sm"
+          className="fixed bottom-20 md:bottom-6 right-3 md:right-6 z-50 bg-[#0A462C] text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg max-w-[calc(100vw-1.5rem)] sm:max-w-sm"
         >
           {toastMessage}
         </div>

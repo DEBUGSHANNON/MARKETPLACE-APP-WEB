@@ -299,8 +299,15 @@ export const OrbitSphere: React.FC<OrbitSphereProps> = ({
     scene.environment = envTarget.texture;
     pmremGenerator.dispose();
 
+    const computeBaseCamZ = (w: number, h: number) => {
+      const aspect = Math.max(w / Math.max(h, 1), 0.42);
+      const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(42 / 2));
+      const fitZ = 5.15 / (tanHalfFov * aspect);
+      return Math.max(9.6, Math.min(23.5, fitZ));
+    };
+
     const camera = new THREE.PerspectiveCamera(42, initWidth / initHeight, 0.1, 100);
-    const baseCamZ = initWidth < 768 ? 11.6 : 9.6;
+    let baseCamZ = computeBaseCamZ(initWidth, initHeight);
     camera.position.set(0, 0.06, baseCamZ);
 
     // Balanced 3-point studio lighting
@@ -562,8 +569,10 @@ export const OrbitSphere: React.FC<OrbitSphereProps> = ({
       isDragging = false;
       if (isPausedRef.current) return;
       const dist = Math.hypot(e.clientX - pointerDownX, e.clientY - pointerDownY);
+      const tapMax = e.pointerType === 'touch' ? 14 : 7;
+      const totalMax = e.pointerType === 'touch' ? 18 : 10;
 
-      if (dist < 7 && totalDragDist < 10) {
+      if (dist < tapMax && totalDragDist < totalMax) {
         updatePointerNdc(e.clientX, e.clientY);
         raycaster.setFromCamera(pointerNdc, camera);
         const hits = raycaster.intersectObjects(clickableMeshes, false);
@@ -591,7 +600,8 @@ export const OrbitSphere: React.FC<OrbitSphereProps> = ({
     const handleWheel = (e: WheelEvent) => {
       if (isPausedRef.current) return;
       if (Math.abs(e.deltaY) < 2) return;
-      targetCamZ = THREE.MathUtils.clamp(targetCamZ + e.deltaY * 0.003, 6.8, 12.6);
+      const maxZoom = Math.max(12.6, baseCamZ + 4);
+      targetCamZ = THREE.MathUtils.clamp(targetCamZ + e.deltaY * 0.003, 6.8, maxZoom);
     };
 
     const handleResize = () => {
@@ -602,6 +612,8 @@ export const OrbitSphere: React.FC<OrbitSphereProps> = ({
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      baseCamZ = computeBaseCamZ(w, h);
+      targetCamZ = baseCamZ;
     };
 
     const onContextLost = (e: Event) => {
@@ -742,7 +754,7 @@ export const OrbitSphere: React.FC<OrbitSphereProps> = ({
   }, [sphereItems]);
 
   return (
-    <section className="relative w-full min-h-screen overflow-hidden bg-[#F3F3EE] select-none">
+    <section className="relative w-full min-h-[100dvh] overflow-hidden bg-[#F3F3EE] select-none">
       {/* Subtle radial gallery studio lighting behind sphere */}
       <div
         aria-hidden="true"
@@ -758,10 +770,10 @@ export const OrbitSphere: React.FC<OrbitSphereProps> = ({
         <div
           ref={mountRef}
           aria-label="Interactive 3D sphere of UTM marketplace items."
-          className="relative z-10 w-full h-screen min-h-[600px]"
+          className="relative z-10 w-full h-[100dvh] min-h-[540px]"
         />
       ) : (
-        <div className="relative z-10 max-w-6xl mx-auto px-6 pt-32 pb-24 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="relative z-10 max-w-6xl mx-auto px-5 pt-24 md:pt-32 pb-28 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredListings.map((item) => (
             <button
               key={item.id}
@@ -802,12 +814,12 @@ export const OrbitSphere: React.FC<OrbitSphereProps> = ({
       )}
 
       {/* Top-left Editorial Headline Overlay */}
-      <div className="pointer-events-none absolute top-28 md:top-20 left-6 md:left-12 z-20 max-w-md">
-        <p className="text-xs font-bold uppercase tracking-widest text-[#0A462C] mb-2 flex items-center gap-1.5">
+      <div className="pointer-events-none absolute top-[68px] sm:top-20 left-4 sm:left-6 md:left-12 right-4 sm:right-auto z-20 max-w-md">
+        <p className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#0A462C] mb-1.5 sm:mb-2 flex items-center gap-1.5">
           <Asterisk className="w-3.5 h-3.5 text-[#659A73]" />
           <span>Universiti Teknologi Malaysia</span>
         </p>
-        <h1 className="text-3xl sm:text-4xl lg:text-[48px] font-extrabold tracking-tight leading-[1.04] text-[#0A462C]">
+        <h1 className="text-2xl sm:text-4xl lg:text-[48px] font-extrabold tracking-tight leading-[1.06] text-[#0A462C]">
           Good things
           <br />
           deserve a{' '}
@@ -818,7 +830,7 @@ export const OrbitSphere: React.FC<OrbitSphereProps> = ({
       </div>
 
       {/* Top-right Editorial Caption */}
-      <div className="pointer-events-none hidden sm:block absolute top-28 md:top-20 right-6 md:right-12 z-20 text-right max-w-xs">
+      <div className="pointer-events-none hidden sm:block absolute top-24 md:top-20 right-6 md:right-12 z-20 text-right max-w-xs">
         <p className="text-xs font-bold text-[#0A462C]">
           Finds from fellow UTM students.
         </p>
@@ -854,7 +866,7 @@ export const OrbitSphere: React.FC<OrbitSphereProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 6 }}
             transition={{ duration: 0.16 }}
-            className="pointer-events-none absolute bottom-24 left-1/2 -translate-x-1/2 z-30 bg-white/80 backdrop-blur-xl border border-white/60 rounded-2xl shadow-lg px-4 py-2.5 flex items-center gap-4 max-w-[90vw]"
+            className="pointer-events-none absolute bottom-36 md:bottom-24 left-1/2 -translate-x-1/2 z-30 bg-white/85 backdrop-blur-xl border border-white/60 rounded-2xl shadow-lg px-3.5 sm:px-4 py-2 sm:py-2.5 flex items-center gap-3 sm:gap-4 w-[calc(100%-1.5rem)] sm:w-auto max-w-md"
           >
             <img
               src={resolveAssetUrl(hoveredListing.imageUrl)}
@@ -883,7 +895,7 @@ export const OrbitSphere: React.FC<OrbitSphereProps> = ({
       </AnimatePresence>
 
       {/* Collapsible Unified Bottom Control Dock */}
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center max-w-[94vw]">
+      <div className="absolute bottom-[74px] md:bottom-5 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center max-w-[94vw]">
         <button
           type="button"
           onClick={() => setDockCollapsed((prev) => !prev)}

@@ -218,14 +218,14 @@ export const SphereObjectModal: React.FC<SphereObjectModalProps> = ({
             }}
             onClick={(e) => e.stopPropagation()}
             style={{ transformOrigin: 'center center' }}
-            className="relative z-10 w-full max-w-[900px] max-h-[88vh] bg-white/92 backdrop-blur-xl border border-white/70 rounded-3xl shadow-[0_28px_80px_rgba(10,34,20,0.28)] overflow-hidden grid grid-cols-1 md:grid-cols-12"
+            className="relative z-10 w-full max-w-[900px] max-h-[90dvh] bg-white/92 backdrop-blur-xl border border-white/70 rounded-3xl shadow-[0_28px_80px_rgba(10,34,20,0.28)] overflow-y-auto md:overflow-hidden grid grid-cols-1 md:grid-cols-12"
           >
             {/* Close Button */}
             <button
               type="button"
               onClick={onClose}
               aria-label="Close pop-up and return to sphere"
-              className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-white/90 hover:bg-white border border-black/10 text-[#112419] flex items-center justify-center shadow-sm transition-transform hover:scale-105 cursor-pointer"
+              className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/90 hover:bg-white border border-black/10 text-[#112419] flex items-center justify-center shadow-sm transition-transform hover:scale-105 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -237,7 +237,7 @@ export const SphereObjectModal: React.FC<SphereObjectModalProps> = ({
                   type="button"
                   onClick={() => void onToggleWishlist(listing)}
                   aria-label={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
-                  className="absolute top-3 left-3 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-md border border-black/10 flex items-center justify-center shadow-sm hover:scale-110 transition-transform cursor-pointer"
+                  className="absolute top-3 left-3 z-10 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md border border-black/10 flex items-center justify-center shadow-sm hover:scale-110 transition-transform cursor-pointer"
                 >
                   <Heart
                     className={`w-4 h-4 ${
@@ -309,7 +309,7 @@ export const SphereObjectModal: React.FC<SphereObjectModalProps> = ({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, transition: { duration: 0.12 } }}
               transition={{ duration: 0.24, delay: 0.08 }}
-              className="md:col-span-6 p-6 sm:p-7 flex flex-col justify-between gap-5 overflow-y-auto max-h-[55vh] md:max-h-[86vh]"
+              className="md:col-span-6 p-5 sm:p-7 flex flex-col justify-between gap-5 md:overflow-y-auto md:max-h-[86vh]"
             >
               <div className="space-y-4 pr-6">
                 <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-[#4A5D50]">

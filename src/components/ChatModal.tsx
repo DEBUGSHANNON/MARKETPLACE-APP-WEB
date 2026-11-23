@@ -194,7 +194,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         initial={{ opacity: 0, scale: 0.94, y: 14 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-        className="bg-white/95 backdrop-blur-xl border border-white/70 rounded-3xl w-full max-w-lg h-[min(660px,88vh)] flex flex-col overflow-hidden shadow-2xl"
+        className="bg-white/95 backdrop-blur-xl border border-white/70 rounded-3xl w-full max-w-lg h-[min(660px,88dvh)] flex flex-col overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="px-5 py-4 bg-gradient-to-r from-[#0A462C] to-[#135E3E] text-white flex items-center justify-between gap-4">
@@ -341,7 +341,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Message about pickup time or spot..."
-            className="flex-1 px-3.5 py-2.5 rounded-xl bg-[#F3F3EE] border border-black/10 text-sm text-[#112419]"
+            className="flex-1 px-3.5 py-2.5 rounded-xl bg-[#F3F3EE] border border-black/10 text-base sm:text-sm text-[#112419]"
           />
           <button
             type="submit"

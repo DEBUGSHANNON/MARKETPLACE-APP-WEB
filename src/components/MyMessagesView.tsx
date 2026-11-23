@@ -8,7 +8,7 @@ import {
   query,
   serverTimestamp,
 } from 'firebase/firestore';
-import { ArrowUpRight, Loader2, MapPin, MessageSquare, Send, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Loader2, MapPin, MessageSquare, Send, Sparkles } from 'lucide-react';
 import { ChatMessage, Reservation } from '../types/marketplace';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { formatMYR, resolveAssetUrl } from '../data/utmCatalog';
@@ -59,6 +59,7 @@ export const MyMessagesView: React.FC<MyMessagesViewProps> = ({
   const [aiReplies, setAiReplies] = useState<string[]>([]);
   const [aiSuggesting, setAiSuggesting] = useState(false);
   const [aiError, setAiError] = useState('');
+  const [mobileThreadOpen, setMobileThreadOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -255,7 +256,11 @@ export const MyMessagesView: React.FC<MyMessagesViewProps> = ({
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           {/* Left Thread List */}
-          <div className="lg:col-span-4 space-y-2.5 max-h-[640px] overflow-y-auto pr-1">
+          <div
+            className={`${
+              mobileThreadOpen ? 'hidden lg:block' : 'block'
+            } lg:col-span-4 space-y-2.5 max-h-[640px] overflow-y-auto pr-1`}
+          >
             {filteredConversations.map((res) => {
               const isBuyer = res.buyerId === user.uid;
               const counterpart = isBuyer ? res.sellerName : res.buyerName;
@@ -264,7 +269,10 @@ export const MyMessagesView: React.FC<MyMessagesViewProps> = ({
                 <button
                   key={res.id}
                   type="button"
-                  onClick={() => setSelectedId(res.id)}
+                  onClick={() => {
+                    setSelectedId(res.id);
+                    setMobileThreadOpen(true);
+                  }}
                   className={`w-full text-left p-3.5 rounded-2xl border transition-all flex items-center gap-3.5 cursor-pointer ${
                     isSelected
                       ? 'bg-white border-[#0A462C]/40 shadow-md'
@@ -298,14 +306,26 @@ export const MyMessagesView: React.FC<MyMessagesViewProps> = ({
 
           {/* Right Live Chat Box */}
           {activeReservation && (
-            <div className="lg:col-span-8 glass-surface border border-[#0A462C]/15 rounded-3xl shadow-sm flex flex-col h-[600px] overflow-hidden">
-              <header className="px-5 py-4 bg-gradient-to-r from-[#0A462C] to-[#135E3E] text-white flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
+            <div
+              className={`${
+                mobileThreadOpen ? 'flex' : 'hidden lg:flex'
+              } lg:col-span-8 glass-surface border border-[#0A462C]/15 rounded-3xl shadow-sm flex-col h-[calc(100dvh-13.5rem)] min-h-[420px] lg:h-[600px] overflow-hidden`}
+            >
+              <header className="px-4 sm:px-5 py-3.5 sm:py-4 bg-gradient-to-r from-[#0A462C] to-[#135E3E] text-white flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => setMobileThreadOpen(false)}
+                    aria-label="Back to chat list"
+                    className="lg:hidden w-9 h-9 rounded-lg bg-white/15 hover:bg-white/25 flex items-center justify-center shrink-0 cursor-pointer"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
                   <img
                     src={resolveAssetUrl(activeReservation.listingImage)}
                     alt={activeReservation.listingTitle}
                     referrerPolicy="no-referrer"
-                    className="w-11 h-11 rounded-xl object-cover shrink-0 border border-white/25"
+                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover shrink-0 border border-white/25"
                   />
                   <div className="min-w-0">
                     <h2 className="text-sm font-bold truncate">
@@ -455,7 +475,7 @@ export const MyMessagesView: React.FC<MyMessagesViewProps> = ({
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   placeholder="Write a message..."
-                  className="flex-1 px-3.5 py-2.5 rounded-xl bg-[#F3F3EE] border border-black/10 text-sm text-[#112419]"
+                  className="flex-1 px-3.5 py-2.5 rounded-xl bg-[#F3F3EE] border border-black/10 text-base sm:text-sm text-[#112419]"
                 />
                 <button
                   type="submit"
