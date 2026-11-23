@@ -828,7 +828,7 @@ export const OrbitSphere: React.FC<OrbitSphereProps> = ({
       <div className="pointer-events-none absolute top-[68px] sm:top-20 left-4 sm:left-6 md:left-12 right-4 sm:right-auto z-20 max-w-md">
         <p className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#0A462C] mb-1.5 sm:mb-2 flex items-center gap-1.5">
           <Asterisk className="w-3.5 h-3.5 text-[#659A73]" />
-          <span>Universiti Teknologi Malaysia</span>
+          <span>CampusTrade UTM · Universiti Teknologi Malaysia</span>
         </p>
         <h1 className="text-2xl sm:text-4xl lg:text-[48px] font-extrabold tracking-tight leading-[1.06] text-[#0A462C]">
           Good things
@@ -838,6 +838,14 @@ export const OrbitSphere: React.FC<OrbitSphereProps> = ({
             second life.
           </span>
         </h1>
+        <p className="mt-2 text-xs sm:text-[13px] leading-relaxed text-[#4A5D50] max-w-sm">
+          Public student-to-student marketplace for UTM Skudai. Explore campus listings freely — no login required to browse.
+        </p>
+        <p className="pointer-events-auto lg:hidden mt-1.5 text-[11px] font-semibold text-[#0A462C]">
+          <a href="privacy.html" className="underline underline-offset-2 hover:text-[#0E5D3B]">
+            Privacy Policy
+          </a>
+        </p>
 
         {syncError && onRetrySync ? (
           <div className="pointer-events-auto mt-3 inline-flex items-center gap-2 rounded-xl bg-white/95 border border-red-200 px-3 py-2 text-[11px] text-[#112419] shadow-sm">
@@ -870,13 +878,26 @@ export const OrbitSphere: React.FC<OrbitSphereProps> = ({
         </p>
       </div>
 
-      {/* Bottom-left Short Description */}
-      <div className="pointer-events-none hidden lg:block absolute bottom-8 left-12 z-20 max-w-xs">
+      {/* Bottom-left Short Description & Privacy Link */}
+      <div className="pointer-events-auto hidden lg:block absolute bottom-8 left-12 z-20 max-w-xs">
         <p className="text-xs leading-relaxed text-[#4A5D50]">
-          Your student-to-student marketplace at Universiti Teknologi Malaysia.
-          Buy pre-loved essentials, sell what you no longer need, and connect
-          with fellow UTM students — all in one place.
+          CampusTrade UTM connects Universiti Teknologi Malaysia students to buy
+          pre-loved essentials, list unused gear, and schedule safe campus
+          handovers.
         </p>
+        <div className="mt-2 flex items-center gap-3 text-[11px] font-semibold text-[#0A462C]">
+          <a href="privacy.html" className="underline underline-offset-2 hover:text-[#0E5D3B]">
+            Privacy Policy
+          </a>
+          <span className="text-[#4A5D50]/50">·</span>
+          <button
+            type="button"
+            onClick={onOpenCatalog}
+            className="underline underline-offset-2 hover:text-[#0E5D3B] cursor-pointer"
+          >
+            Browse Public Catalog
+          </button>
+        </div>
       </div>
 
       {/* Bottom-right Counter-Headline */}

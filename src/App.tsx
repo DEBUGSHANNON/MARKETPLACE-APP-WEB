@@ -1095,7 +1095,16 @@ function MarketplaceContent() {
 
       {currentView !== 'orbit' && (
         <footer className="relative z-10 border-t border-[#0A462C]/10 px-6 md:px-10 pt-6 pb-24 md:pb-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#4A5D50]">
-          <span className="font-bold text-[#0A462C]">CampusTrade UTM</span>
+          <div className="flex items-center gap-3">
+            <span className="font-bold text-[#0A462C]">CampusTrade UTM</span>
+            <span aria-hidden="true">·</span>
+            <a
+              href="privacy.html"
+              className="font-semibold text-[#0A462C] underline underline-offset-2 hover:text-[#0E5D3B]"
+            >
+              Privacy Policy
+            </a>
+          </div>
           <span className="text-center sm:text-right">
             Student-to-student exchange at Universiti Teknologi Malaysia, Skudai.
           </span>

@@ -87,7 +87,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           referrerPolicy="no-referrer"
           className="w-7 h-7 rounded-lg object-cover shrink-0 shadow-sm"
         />
-        <span>CampusTrade</span>
+        <span className="text-sm sm:text-lg">CampusTrade UTM</span>
       </button>
 
       {/* Zone 2: Clean single-line navigation links */}
