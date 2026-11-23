@@ -13,7 +13,7 @@ import {
   User as UserIcon,
 } from 'lucide-react';
 import { AppView } from '../types/marketplace';
-import { isUtmStudentEmail } from '../data/utmCatalog';
+import { isUtmStudentEmail, resolveAssetUrl } from '../data/utmCatalog';
 
 interface NavbarProps {
   currentView: AppView;
@@ -81,9 +81,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         onClick={() => onNavigate('orbit')}
         className="text-base sm:text-lg font-extrabold tracking-tight text-[#0A462C] whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-2 min-h-[40px]"
       >
-        <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#0A462C] text-white text-xs font-bold">
-          C
-        </span>
+        <img
+          src={resolveAssetUrl('/src/assets/images/campustrade_utm_logo_1795430976537.jpg')}
+          alt="CampusTrade UTM logo"
+          referrerPolicy="no-referrer"
+          className="w-7 h-7 rounded-lg object-cover shrink-0 shadow-sm"
+        />
         <span>CampusTrade</span>
       </button>
 
