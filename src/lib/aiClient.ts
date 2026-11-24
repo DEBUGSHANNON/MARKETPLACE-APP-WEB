@@ -32,8 +32,22 @@ export interface AiListingInsights {
   meetupTip: string;
 }
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
-const AI_REQUEST_TIMEOUT_MS = 18000;
+const DEFAULT_GITHUB_PAGES_API_BASE = 'https://marketplace-app-web.onrender.com';
+
+function resolveApiBase(): string {
+  const configured = (import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/$/, '');
+  if (configured) return configured;
+  if (
+    typeof window !== 'undefined' &&
+    window.location.hostname === 'debugshannon.github.io'
+  ) {
+    return DEFAULT_GITHUB_PAGES_API_BASE;
+  }
+  return '';
+}
+
+const API_BASE = resolveApiBase();
+const AI_REQUEST_TIMEOUT_MS = 35000;
 
 async function postAiJson<T>(url: string, body: unknown): Promise<T> {
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -56,7 +70,7 @@ async function postAiJson<T>(url: string, body: unknown): Promise<T> {
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {
       throw new Error(
-        'The AI assistant took too long to respond on this connection. Please try again.',
+        'The AI server is taking a moment to respond (it may be waking up). Please retry in a few seconds.',
       );
     }
     throw new Error(
